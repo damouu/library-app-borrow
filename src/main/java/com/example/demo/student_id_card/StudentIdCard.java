@@ -1,6 +1,6 @@
 package com.example.demo.student_id_card;
 
-import com.example.demo.book.Book;
+import com.example.demo.book.BookStudent;
 import com.example.demo.course.Course;
 import com.example.demo.student.Student;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -43,19 +43,23 @@ public class StudentIdCard implements Serializable {
     @Setter
     private Student student;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "studentIdCard", fetch = FetchType.EAGER)
-    @Getter(onMethod = @__(@JsonIgnore))
-    @Setter
-    private Set<Book> books;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.ALL})
     @JoinTable(name = "course_student", joinColumns = {@JoinColumn(name = "student_id_card")}, inverseJoinColumns = {@JoinColumn(name = "course")})
     @Getter(onMethod = @__(@JsonIgnore))
+    @Column(name = "uuid", columnDefinition = "UUID", nullable = false)
     @Setter
     protected Set<Course> courses = new HashSet<>();
+
+
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
+    @Getter(onMethod = @__(@JsonIgnore))
+    @Setter
+    protected Set<BookStudent> books = new HashSet<>();
 
     @JsonCreator
     public StudentIdCard(@JsonProperty("uuid") UUID uuid) {
         this.uuid = uuid;
     }
+    
 }
