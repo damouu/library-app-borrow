@@ -1,6 +1,5 @@
 package com.example.demo.book;
 
-import com.example.demo.student_id_card.StudentIdCard;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -16,6 +15,8 @@ import lombok.Setter;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -74,11 +75,9 @@ public class Book {
     @Setter
     private LocalDate created_at;
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "student_uuid_card", referencedColumnName = "uuid")
-    @Getter(onMethod = @__(@JsonIgnore)) // generate the getter with the specific annotation.
-    @Setter
-    private StudentIdCard studentIdCard;
+
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
+    private Set<BookStudent> students = new HashSet<>();
 
     @JsonCreator
     public Book(@JsonProperty("uuid") UUID uuid, @JsonProperty("title") String title, @JsonProperty("genre") String genre, @JsonProperty("totalPages") Integer totalPages, @JsonProperty("publisher") String publisher, @JsonProperty("author") String author, @JsonProperty("created_at") LocalDate created_at) {
@@ -89,5 +88,13 @@ public class Book {
         this.publisher = publisher;
         this.author = author;
         this.created_at = created_at;
+    }
+
+    public Set<BookStudent> getStudentIdCard() {
+        return students;
+    }
+
+    public void setStudentIdCard(Set<BookStudent> students) {
+        this.students = students;
     }
 }
