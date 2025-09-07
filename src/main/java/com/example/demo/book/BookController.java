@@ -61,6 +61,11 @@ public class BookController {
         return bookService.returnStudentBorrowBooks(bookUuid, studentUuidCard);
     }
 
+    @PutMapping(path = "/{book}/studentCard/{studentCard}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> updateReturnStudentBorrowBooks(@PathVariable("book") UUID bookUuid, @PathVariable("studentCard") UUID studentUuidCard) {
+        return bookService.updateReturnStudentBorrowBook(bookUuid, studentUuidCard);
+    }
+
     @GetMapping(path = "/studentCard/{studentCard}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> bookStudentBorrow(@PathVariable("studentCard") UUID studentCard) {
         return bookService.getBooksStudentCard(studentCard);
