@@ -209,6 +209,35 @@ public class BookService {
         return ResponseEntity.status(status).body(response);
     }
 
+
+    /**
+     * Return student borrow books response entity.
+     *
+     * @param bookUuid        the book uuid
+     * @param studentUuidCard the student uuid card
+     * @return the response entity
+     */
+    public ResponseEntity<?> updateReturnStudentBorrowBook(UUID bookUuid, UUID studentUuidCard) {
+        Book book = bookRepository.findByUuid(bookUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "book does not exist"));
+        StudentIdCard studentIdCard = studentIdCardRepository.findStudentIdCardByUuid(studentUuidCard).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "studentIdCard does not exist" + studentUuidCard));
+        Optional<BookStudent> bookStudent = bookStudentRepository.findBookStudentByIDUpdate(book.getId());
+        int status;
+        String response;
+        if (bookStudent.isPresent() && bookStudent.get().getBorrow_return_date() == null && !bookStudent.get().isGranted_borrow_extend()) {
+            long date = System.currentTimeMillis() + 14 * 24 * 3600 * 1000;
+            Date newDate = new Date(date);
+            bookStudent.get().setGranted_borrow_extend(true);
+            bookStudent.get().setBorrow_end_date(newDate);
+            bookStudentRepository.save(bookStudent.get());
+            status = 201;
+            response = "updated";
+        } else {
+            status = 401;
+            response = "error";
+        }
+        return ResponseEntity.status(status).body(response);
+    }
+
     /**
      * Gets books student card.
      *
