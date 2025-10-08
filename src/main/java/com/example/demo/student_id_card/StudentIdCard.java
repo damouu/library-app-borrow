@@ -10,10 +10,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -22,6 +24,7 @@ import java.util.UUID;
 @Entity(name = "Student_id_card")
 @Table(name = "Student_id_card", uniqueConstraints = @UniqueConstraint(columnNames = {"uuid", "uuid"}, name = "student_card_uuid_unique"))
 @NoArgsConstructor
+@Where(clause = "is_active=1")
 public class StudentIdCard implements Serializable {
     @Id
     @Column(unique = true, updatable = false, nullable = false)
@@ -37,19 +40,32 @@ public class StudentIdCard implements Serializable {
     @Setter
     private UUID uuid;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "student_id", referencedColumnName = "id")
-    @Getter(onMethod = @__(@JsonIgnore)) // generate the getter with the specific annotation.
+    @Column(name = "created_at")
+    @Getter
     @Setter
-    private Student student;
+    private LocalDate created_at;
+
+    @Column(name = "valid_until")
+    @Getter
+    @Setter
+    private LocalDate valid_until;
+
+    @Column(name = "is_active")
+    private Boolean active;
+
+//    @OneToOne(cascade = CascadeType.ALL)
+//    @JoinColumn(name = "student_id", referencedColumnName = "id")
+//    @Getter(onMethod = @__(@JsonIgnore)) // generate the getter with the specific annotation.
+//    @Setter
+//    private Student student;
 
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.ALL})
-    @JoinTable(name = "course_student", joinColumns = {@JoinColumn(name = "student_id_card")}, inverseJoinColumns = {@JoinColumn(name = "course")})
-    @Getter(onMethod = @__(@JsonIgnore))
-    @Column(name = "uuid", columnDefinition = "UUID", nullable = false)
-    @Setter
-    protected Set<Course> courses = new HashSet<>();
+//    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.ALL})
+//    @JoinTable(name = "course_student", joinColumns = {@JoinColumn(name = "student_id_card")}, inverseJoinColumns = {@JoinColumn(name = "course")})
+//    @Getter(onMethod = @__(@JsonIgnore))
+//    @Column(name = "uuid", columnDefinition = "UUID", nullable = false)
+//    @Setter
+//    protected Set<Course> courses = new HashSet<>();
 
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
@@ -61,5 +77,4 @@ public class StudentIdCard implements Serializable {
     public StudentIdCard(@JsonProperty("uuid") UUID uuid) {
         this.uuid = uuid;
     }
-    
 }
