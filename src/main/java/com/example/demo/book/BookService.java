@@ -159,7 +159,7 @@ public class BookService {
     /**
      * Insert student borrow books response entity.
      *
-     * @param bookUuid        the book uuid
+     * @param bookUuid           the book uuid
      * @param memberCardUUIDCard the student uuid card
      * @return {@code } the response entity
      */
@@ -193,7 +193,7 @@ public class BookService {
     /**
      * Return student borrow books response entity.
      *
-     * @param bookUuid        the book uuid
+     * @param bookUuid           the book uuid
      * @param memberCardUUIDCard the student uuid card
      * @return the response entity
      */
@@ -219,7 +219,7 @@ public class BookService {
     /**
      * Return student borrow books response entity.
      *
-     * @param bookUuid        the book uuid
+     * @param bookUuid           the book uuid
      * @param memberCardUUIDCard the student uuid card
      * @return the response entity
      */
