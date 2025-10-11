@@ -52,22 +52,22 @@ public class BookController {
     }
 
     @PostMapping(path = "/{book}/studentCard/{studentCard}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> studentBorrowBooks(@PathVariable("book") UUID bookUuid, @PathVariable("studentCard") UUID studentUuidCard) {
-        return bookService.insertStudentBorrowBooks(bookUuid, studentUuidCard);
+    public ResponseEntity<?> studentBorrowBooks(@PathVariable("book") UUID bookUuid, @PathVariable("studentCard") UUID memberCardUUIDCard) {
+        return bookService.insertStudentBorrowBooks(bookUuid, memberCardUUIDCard);
     }
 
     @DeleteMapping(path = "/{book}/studentCard/{studentCard}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> returnStudentBorrowBooks(@PathVariable("book") UUID bookUuid, @PathVariable("studentCard") UUID studentUuidCard) {
-        return bookService.returnStudentBorrowBooks(bookUuid, studentUuidCard);
+    public ResponseEntity<?> returnStudentBorrowBooks(@PathVariable("book") UUID bookUuid, @PathVariable("studentCard") UUID memberCardUUIDCard) {
+        return bookService.returnStudentBorrowBooks(bookUuid, memberCardUUIDCard);
     }
 
     @PutMapping(path = "/{book}/studentCard/{studentCard}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateReturnStudentBorrowBooks(@PathVariable("book") UUID bookUuid, @PathVariable("studentCard") UUID studentUuidCard) {
-        return bookService.updateReturnStudentBorrowBook(bookUuid, studentUuidCard);
+    public ResponseEntity<?> updateReturnStudentBorrowBooks(@PathVariable("book") UUID bookUuid, @PathVariable("studentCard") UUID memberCardUUIDCard) {
+        return bookService.updateReturnStudentBorrowBook(bookUuid, memberCardUUIDCard);
     }
 
-    @GetMapping(path = "/studentCard/{studentCard}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> bookStudentBorrow(@PathVariable("studentCard") UUID studentCard) {
-        return bookService.getBooksStudentCard(studentCard);
-    }
+//    @GetMapping(path = "/studentCard/{studentCard}", produces = MediaType.APPLICATION_JSON_VALUE)
+//    public ResponseEntity<?> bookStudentBorrow(@PathVariable("studentCard") UUID studentCard) {
+//        return bookService.getBooksStudentCard(studentCard);
+//    }
 }
