@@ -1,9 +1,8 @@
 package com.example.demo.book;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import com.example.demo.chapter.Chapter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
@@ -13,15 +12,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Entity(name = "book")
-@Table(name = "book", uniqueConstraints = {@UniqueConstraint(name = "book_uuid", columnNames = "uuid")})
+@Table(name = "book", uniqueConstraints = {@UniqueConstraint(name = "book_uuid", columnNames = "book_uuid")})
 @NoArgsConstructor
 public class Book {
     @Id
@@ -32,69 +28,38 @@ public class Book {
     @Setter
     private Integer id;
 
-    @Column(nullable = false, columnDefinition = "UUID", name = "uuid")
+    @Column(nullable = false, columnDefinition = "UUID", name = "book_uuid")
     @Getter
     @Setter
-    private UUID uuid;
+    private UUID book_uuid;
 
-    @Column(name = "title", nullable = false)
+    @Column(nullable = false, name = "is_borrowed")
     @Getter
     @Setter
-    private String title;
+    private boolean is_borrowed;
 
-    @Column(name = "genre", nullable = false)
-    @Getter
+    @Column(nullable = false, name = "added_date", columnDefinition = "DATE")
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @Getter(onMethod = @__(@JsonIgnore)) // generate the getter with the specific annotation.
     @Setter
-    private String genre;
-
-    @Column(name = "total_pages", nullable = false)
-    @Getter
-    @Setter
-    private Integer totalPages;
-
-    @Column(name = "publisher", nullable = false)
-    @Getter
-    @Setter
-    private String publisher;
-
-    @Column(name = "author", nullable = false)
-    @Getter
-    @Setter
-    private String author;
+    private LocalDate added_date;
 
     @Column(name = "deleted_at", columnDefinition = "DATE")
     @Getter
     @Setter
     private LocalDate deleted_at;
 
-    @Column(name = "created_at", nullable = false, columnDefinition = "Date")
-    @JsonDeserialize(using = LocalDateDeserializer.class)
-    @JsonSerialize(using = LocalDateSerializer.class)
-    @NotNull
-    @Getter(onMethod = @__(@JsonIgnore)) // generate the getter with the specific annotation.
-    @Setter
-    private LocalDate created_at;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chapter_id", referencedColumnName = "id")
+    private Chapter chapter_id;
 
-
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
-    private Set<BookMemberCard> students = new HashSet<>();
-
-    @JsonCreator
-    public Book(@JsonProperty("uuid") UUID uuid, @JsonProperty("title") String title, @JsonProperty("genre") String genre, @JsonProperty("totalPages") Integer totalPages, @JsonProperty("publisher") String publisher, @JsonProperty("author") String author, @JsonProperty("created_at") LocalDate created_at) {
-        this.uuid = uuid;
-        this.title = title;
-        this.genre = genre;
-        this.totalPages = totalPages;
-        this.publisher = publisher;
-        this.author = author;
-        this.created_at = created_at;
-    }
-
-    public Set<BookMemberCard> getMemberCard() {
-        return students;
-    }
-
-    public void setMemberCard(Set<BookMemberCard> students) {
-        this.students = students;
+    public Book(Integer id, UUID book_uuid, String title, boolean is_borrowed, LocalDate added_date, LocalDate deleted_at, Chapter chapter) {
+        this.id = id;
+        this.book_uuid = book_uuid;
+        this.is_borrowed = is_borrowed;
+        this.added_date = added_date;
+        this.deleted_at = deleted_at;
+        this.chapter_id = chapter;
     }
 }
