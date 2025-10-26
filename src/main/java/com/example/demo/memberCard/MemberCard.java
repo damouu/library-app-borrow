@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -19,10 +18,9 @@ import java.util.Set;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Entity(name = "memberCard")
-@Table(name = "memberCard", uniqueConstraints = @UniqueConstraint(columnNames = {"uuid", "uuid"}, name = "student_card_uuid_unique"))
+@Entity(name = "member_card")
+@Table(name = "member_card", uniqueConstraints = @UniqueConstraint(columnNames = {"member_card_uuid", "member_card_uuid"}, name = "member_card_uuid_unique"))
 @NoArgsConstructor
-@Where(clause = "is_active=1")
 public class MemberCard implements Serializable {
     @Id
     @Column(unique = true, updatable = false, nullable = false)
@@ -48,10 +46,11 @@ public class MemberCard implements Serializable {
     @Setter
     private LocalDateTime valid_until;
 
-    @Column(name = "is_active")
+    @Column(name = "deleted_at", columnDefinition = "DATE")
     @Getter
     @Setter
-    private Boolean active;
+    private LocalDateTime deleted_at;
+
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     @Getter(onMethod = @__(@JsonIgnore))
