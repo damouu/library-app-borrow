@@ -1,5 +1,6 @@
 package com.example.demo.series;
 
+import com.example.demo.chapter.Chapter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -14,6 +15,7 @@ import lombok.Setter;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -92,6 +94,9 @@ public class Series {
     @Getter(onMethod = @__(@JsonIgnore))
     @Setter
     private LocalDate created_at;
+
+    @OneToMany(mappedBy = "series")
+    private List<Chapter> chapters;
 
     @JsonCreator
     public Series(Integer id, UUID series_uuid, String title, String genre, String cover_artwork_URL, String illustrator, String publisher, LocalDate last_print_publication_date, LocalDate first_print_publication_date, String author, LocalDate deleted_at, LocalDate created_at) {
