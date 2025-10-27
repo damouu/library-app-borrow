@@ -65,7 +65,7 @@ public class MemberCardService {
         return ResponseEntity.status(HttpStatus.CREATED).location(URI.create("http://localhost:8083/api/studentCard/" + memberCard.getMember_card_uuid())).body(memberCard);
     }
 
-    public ResponseEntity<HashMap<String, String>> borrowBooks(UUID memberCardUUID, Map<Object, ArrayList<UUID>> booksArrayJson) throws ResponseStatusException {
+    public ResponseEntity<HashMap<String, Object>> borrowBooks(UUID memberCardUUID, Map<Object, ArrayList<UUID>> booksArrayJson) throws ResponseStatusException {
         MemberCard memberCard = memberCardRepository.findMemberCardByUuid(memberCardUUID).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "member card does not exist"));
         UUID uuid = UUID.randomUUID();
         for (UUID bookUUID : booksArrayJson.get("books_UUID")) {
@@ -85,11 +85,15 @@ public class MemberCardService {
             }
         }
 
-        HashMap<String, String> response = new HashMap<>();
+        HashMap<String, Object> response = new LinkedHashMap<>();
+        HashMap<String, String> data = new LinkedHashMap<>();
+        response.put("success", true);
+        response.put("status", 201);
         response.put("message", booksArrayJson.get("books_UUID").size() + "冊の本は貸し出しされる完了です。");
-        response.put("return_borrow_date", String.valueOf(LocalDate.now().plusWeeks(2)));
-        response.put("start_borrow_date", String.valueOf(LocalDate.now()));
-        response.put("borrow_UUID", uuid.toString());
+        response.put("data", data);
+        data.put("borrow_UUID", uuid.toString());
+        data.put("start_borrow_date", String.valueOf(LocalDate.now()));
+        data.put("return_borrow_date", String.valueOf(LocalDate.now().plusWeeks(2)));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
