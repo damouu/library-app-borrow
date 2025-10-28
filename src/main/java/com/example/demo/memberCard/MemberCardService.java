@@ -16,8 +16,12 @@ import org.springframework.web.server.ResponseStatusException;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+/**
+ * The type Member card service.
+ */
 @Service
 @Data
 public class MemberCardService {
@@ -98,4 +102,45 @@ public class MemberCardService {
     }
 
 
+    /**
+     * 貸し出しの本を返却の機能性です。
+     *
+     * @param memberCardUUID the member card uuid
+     * @param borrowUUID     the borrow uuid
+     * @return the response entity
+     * @throws ResponseStatusException the response status exception
+     * @implNote {@link #SD-234  https://damou.myjetbrains.com/youtrack/issue/SD-234/6LK444GX5Ye644GX5pys44KS6LU5Y20}
+     */
+    public ResponseEntity<HashMap<String, Object>> returnBorrowBooks(UUID memberCardUUID, UUID borrowUUID) throws ResponseStatusException {
+        Optional<List<BookMemberCard>> bookMemberCard = Optional.ofNullable(bookMemberCardRepository.findBookStudentByBorrow_uuid(borrowUUID)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "borrow does not exist"));
+        // 受信されたの会員番号カードと貸出の番号を合ってるなら進歩する反面合ってない状況ならエラーの外例を発生されます。。
+        if (!Objects.equals(bookMemberCard.get().get(0).getMemberCard().getMember_card_uuid().toString(), memberCardUUID.toString())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "error");
+        }
+        boolean return_date_is_late = false;
+        String message = null;
+        HashMap<String, Object> response = new LinkedHashMap<>();
+        HashMap<String, String> data = new LinkedHashMap<>();
+        response.put("success", true);
+        response.put("status", 200);
+        // 予定されたの返すの日程を超えちゃうなら何日で数えて罰金を判断されて科します。一日の遅らすに従って五百円の金額が定められたです。
+        if (bookMemberCard.get().get(0).getBorrow_end_date().isBefore(LocalDate.now())) {
+            return_date_is_late = true;
+            final long days = ChronoUnit.DAYS.between(bookMemberCard.get().get(0).getBorrow_end_date(), LocalDate.now());
+            message = "貸し出しされたの本は" + days + "日で遅刻を返却されましたので" + days * 500 + "円の罰金を科します。";
+            response.put("message", message);
+        }
+        for (BookMemberCard optionalBookMemberCard : bookMemberCard.get()) {
+            optionalBookMemberCard.setBorrow_return_date(LocalDate.now());
+            optionalBookMemberCard.getBook().set_borrowed(false);
+            bookRepository.save(optionalBookMemberCard.getBook());
+            bookMemberCardRepository.save(optionalBookMemberCard);
+        }
+        response.put("return_lately", return_date_is_late);
+        response.put("data", data);
+        data.put("start_borrow_date", String.valueOf(bookMemberCard.get().get(0).getBorrow_return_date()));
+        data.put("expected_return_borrow_date", String.valueOf(bookMemberCard.get().get(0).getBorrow_end_date()));
+        data.put("actual_return_borrow_date", String.valueOf(bookMemberCard.get().get(0).getBorrow_start_date()));
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }
