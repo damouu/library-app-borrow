@@ -18,6 +18,7 @@ public interface BorrowSummaryRepository extends JpaRepository<BorrowSummaryView
                        jsonb_build_object(
                            'book_uuid', b.book_uuid,
                            'title', c.title,
+                           'second_title', c.second_title,
                            'chapter_number', c.chapter_number,
                            'total_pages', c.total_pages,
                            'cover_artwork_url', c.cover_artwork_url
