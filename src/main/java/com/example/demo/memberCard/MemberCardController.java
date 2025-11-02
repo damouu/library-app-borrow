@@ -47,4 +47,9 @@ public class MemberCardController {
         return memberCardService.returnBorrowBooks(memberCardUUID, borrowUUID);
     }
 
+    @GetMapping(path = "/{memberCardUUID}/history", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getHistory(@PathVariable("memberCardUUID") UUID memberCardUUID) {
+        return memberCardService.getHistory(memberCardUUID);
+    }
+
 }
