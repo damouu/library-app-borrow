@@ -1,4 +1,4 @@
-package com.example.demo.book;
+package com.example.demo.view;
 
 import com.vladmihalcea.hibernate.type.json.JsonType;
 import lombok.Getter;
@@ -25,6 +25,10 @@ public class BorrowSummaryView {
     private UUID borrowUuid;
 
     private LocalDate borrowReturnDate;
+
+    private LocalDate borrowEndDate;
+
+    private LocalDate borrowStartDate;
 
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
