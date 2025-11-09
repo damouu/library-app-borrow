@@ -1,6 +1,5 @@
-package com.example.demo.book;
+package com.example.demo.model;
 
-import com.example.demo.memberCard.MemberCard;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
