@@ -1,5 +1,7 @@
-package com.example.demo.book;
+package com.example.demo.repository;
 
+import com.example.demo.model.Book;
+import com.example.demo.model.Chapter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -9,7 +11,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,17 +21,10 @@ public interface BookRepository extends JpaRepository<Book, Integer>, JpaSpecifi
     @Query("SELECT b FROM book b WHERE b.deleted_at is null and b.book_uuid = :uuid")
     Optional<Book> findByUuid(UUID uuid);
 
-//    Optional<List<Book>> findByTitleContaining(@Param("title") String title, Pageable pageable);
-//
-//    Optional<Collection<Book>> findAllByTotalPages(Optional<Integer> integer);
-//
-//    Optional<Collection<Book>> findAllByGenre(Optional<String> stringOptional);
-//
-//    Optional<Collection<Book>> findAllByGenreAndTotalPages(Optional<String> genre, Optional<Integer> totalPages);
 
     Page<Book> findAll(Specification<Book> specification, Pageable pageable);
 
-    @Query("SELECT b FROM book b WHERE b.deleted_at is null and b.book_uuid = :uuid")
-    Optional<BookMemberCard> findBookStudentByUUID(UUID uuid);
+    @Query("SELECT b FROM book b WHERE b.chapter = :chapter and b.deleted_at is null and b.is_borrowed is false order by b.added_date desc ")
+    List<Book> findRecentBooksByChapter(@Param("chapter") Chapter chapter, Pageable pageable);
 
 }
