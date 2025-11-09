@@ -1,5 +1,6 @@
-package com.example.demo.memberCard;
+package com.example.demo.repository;
 
+import com.example.demo.model.MemberCard;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
