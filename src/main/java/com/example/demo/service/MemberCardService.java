@@ -1,6 +1,13 @@
-package com.example.demo.memberCard;
+package com.example.demo.service;
 
-import com.example.demo.book.*;
+import com.example.demo.model.Book;
+import com.example.demo.model.BookMemberCard;
+import com.example.demo.model.MemberCard;
+import com.example.demo.repository.BookRepository;
+import com.example.demo.repository.BookStudentRepository;
+import com.example.demo.repository.BorrowSummaryRepository;
+import com.example.demo.repository.MemberCardRepository;
+import com.example.demo.view.BorrowSummaryView;
 import lombok.Data;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -70,34 +77,35 @@ public class MemberCardService {
 
     public ResponseEntity<HashMap<String, Object>> borrowBooks(UUID memberCardUUID, Map<Object, ArrayList<UUID>> booksArrayJson) throws ResponseStatusException {
         MemberCard memberCard = memberCardRepository.findMemberCardByUuid(memberCardUUID).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "member card does not exist"));
-        UUID uuid = UUID.randomUUID();
-        for (UUID bookUUID : booksArrayJson.get("books_UUID")) {
-            if (!bookMemberCardRepository.existsByBookIsBorrowed(bookUUID)) {
-                BookMemberCard bookMemberCard = new BookMemberCard();
-                bookMemberCard.setBorrow_start_date(LocalDate.now());
-                bookMemberCard.setBorrow_end_date(LocalDate.now().plusWeeks(2));
-                bookMemberCard.setBorrow_uuid(uuid);
-                bookMemberCard.setMemberCard(memberCard);
-                Book book = bookRepository.findByUuid(bookUUID).get();
-                book.set_borrowed(true);
-                bookMemberCard.setBook(book);
-                bookRepository.save(book);
-                bookMemberCardRepository.save(bookMemberCard);
-            } else {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "error");
+        if (bookMemberCardRepository.getBookMemberCardByBook(memberCard)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
+        } else {
+            UUID uuid = UUID.randomUUID();
+            for (UUID bookUUID : booksArrayJson.get("books_UUID")) {
+                if (!bookMemberCardRepository.existsByBookIsBorrowed(bookUUID)) {
+                    BookMemberCard bookMemberCard = new BookMemberCard();
+                    bookMemberCard.setBorrow_start_date(LocalDate.now());
+                    bookMemberCard.setBorrow_end_date(LocalDate.now().plusWeeks(2));
+                    bookMemberCard.setBorrow_uuid(uuid);
+                    bookMemberCard.setMemberCard(memberCard);
+                    Book book = bookRepository.findByUuid(bookUUID).get();
+                    book.set_borrowed(true);
+                    bookMemberCard.setBook(book);
+                    bookRepository.save(book);
+                    bookMemberCardRepository.save(bookMemberCard);
+                } else {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "error");
+                }
             }
+            HashMap<String, Object> response = new LinkedHashMap<>();
+            HashMap<String, String> data = new LinkedHashMap<>();
+            response.put("message", booksArrayJson.get("books_UUID").size() + "冊の本は貸し出しされる完了です。");
+            response.put("data", data);
+            data.put("borrow_UUID", uuid.toString());
+            data.put("start_borrow_date", String.valueOf(LocalDate.now()));
+            data.put("return_borrow_date", String.valueOf(LocalDate.now().plusWeeks(2)));
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
-
-        HashMap<String, Object> response = new LinkedHashMap<>();
-        HashMap<String, String> data = new LinkedHashMap<>();
-        response.put("success", true);
-        response.put("status", 201);
-        response.put("message", booksArrayJson.get("books_UUID").size() + "冊の本は貸し出しされる完了です。");
-        response.put("data", data);
-        data.put("borrow_UUID", uuid.toString());
-        data.put("start_borrow_date", String.valueOf(LocalDate.now()));
-        data.put("return_borrow_date", String.valueOf(LocalDate.now().plusWeeks(2)));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
 
@@ -155,21 +163,33 @@ public class MemberCardService {
     public ResponseEntity<HashMap<String, Object>> getHistory(UUID memberCardUUID) throws ResponseStatusException {
         List<BorrowSummaryView> borrowSummaries = borrowSummaryRepository.findBorrowSummaries(memberCardUUID);
         HashMap<String, Object> response = new LinkedHashMap<>();
-        response.put("success", true);
-        boolean unreturned_borrows = false;
-        response.put("code", 200);
         response.put("memberCard_UUID", memberCardUUID.toString());
-        if (borrowSummaries.getFirst().getBorrowReturnDate() == null) {
-            unreturned_borrows = true;
-            response.put("unreturned_borrow_position", 0);
-        }
-        response.put("unreturned_borrows", unreturned_borrows);
-        response.put("size", borrowSummaries.size());
         HashMap<String, Object> borrow_history = new LinkedHashMap<>();
-        for (BorrowSummaryView borrowSummaryView : borrowSummaries) {
-            List<Object> books = new ArrayList<Object>();
-            books.addAll(borrowSummaryView.getBooks());
-            borrow_history.put(String.valueOf(borrowSummaryView.getBorrowUuid()), books);
+        if (!borrowSummaries.isEmpty()) {
+            if (borrowSummaries.getFirst().getBorrowReturnDate() == null) {
+                response.put("unreturned_borrow_position", 0);
+                response.put("unreturned_borrows", true);
+                response.put("size", borrowSummaries.size());
+            }
+            for (BorrowSummaryView borrowSummaryView : borrowSummaries) {
+                List<Object> books = new ArrayList<>();
+                boolean return_date_is_late = false;
+                HashMap<String, Object> dede = new LinkedHashMap<>();
+                books.addAll(borrowSummaryView.getBooks());
+                dede.put("borrow_start_date", String.valueOf(borrowSummaryView.getBorrowStartDate()));
+                dede.put("borrow_expected_end_date", String.valueOf(borrowSummaryView.getBorrowEndDate()));
+                dede.put("borrow_return_date", String.valueOf(borrowSummaryView.getBorrowReturnDate()));
+                if (borrowSummaryView.getBorrowReturnDate() != null && borrowSummaryView.getBorrowEndDate().isBefore(borrowSummaryView.getBorrowReturnDate())) {
+                    final long days = ChronoUnit.DAYS.between(borrowSummaryView.getBorrowEndDate(), borrowSummaryView.getBorrowReturnDate());
+                    return_date_is_late = true;
+                    dede.put("return_date_is_late", return_date_is_late);
+                    dede.put("return_date_days", days);
+                    dede.put("payment_fee", days * 500);
+                }
+                dede.put("return_date_is_late", return_date_is_late);
+                dede.put("Books", books);
+                borrow_history.put(String.valueOf(borrowSummaryView.getBorrowUuid()), dede);
+            }
         }
         response.put("borrows_UUID", borrow_history);
         return ResponseEntity.status(HttpStatus.OK).body(response);
