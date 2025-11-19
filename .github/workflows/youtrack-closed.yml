@@ -1,9 +1,10 @@
 name: YouTrack-Closed
 
 on:
-  pull_request:
+  workflow_run:
+    workflows: [ "build-and-publish" ]
     types:
-      - closed
+      - completed
 
 jobs:
   build:

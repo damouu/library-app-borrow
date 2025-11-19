@@ -1,14 +1,15 @@
-name: Java CI with Maven
+name: build-and-publish
 
 on:
   workflow_run:
-    workflows: [ "YouTrack-Closed" ]
+    workflows: [ "Prepare" ]
     types:
       - completed
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Download SHA Artifact
         uses: actions/download-artifact@v4

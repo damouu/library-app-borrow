@@ -1,4 +1,4 @@
-name: Test
+name: Tests
 
 on:
   push:
@@ -54,23 +54,16 @@ jobs:
           update_existing: true
           search_existing: open
 
-      - name: Add TestFailed
+      - name: move youtrack-test-failed
         if: ${{ failure() }}
-        uses: devops-infra/action-commit-push@master
+        uses: bloobirds-it/action-youtrack-move@v1.0.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          commit_prefix: ${{ github.event.head_commit.message }} TestFailed
-
-      - name: Save SHA to file
-        if: ${{ success() }}
-        run: echo ${{ github.sha }} > sha.txt
-
-      - name: Upload SHA Artifact
-        if: ${{ success() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: 'specific-sha'
-          path: sha.txt
+          github-token: ${{ secrets.MyWorkflow }}
+          yt-url: ${{ secrets.YOUTRACK_URL }}
+          yt-token: ${{ secrets.YOUTRACK_TOKEN }}
+          yt-project-id: "SD"
+          yt-column-triggers: "Test"
+          yt-column-target: "TestFailed"
 
       - name: pull-request
         if: ${{ success() }}
