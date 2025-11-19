@@ -54,19 +54,23 @@ jobs:
           update_existing: true
           search_existing: open
 
-      #      - name: Add TestFailed
-      #        if: ${{ failure() }}
-      #        uses: devops-infra/action-commit-push@master
-      #        with:
-      #          github_token: ${{ secrets.GITHUB_TOKEN }}
-      #          commit_prefix: ${{ github.event.head_commit.message }} TestFailed
+      - name: Add TestFailed
+        if: ${{ failure() }}
+        uses: devops-infra/action-commit-push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          commit_prefix: ${{ github.event.head_commit.message }} TestFailed
 
-      #      - name: Add TestsPassed
-      #        if: ${{ success() }}
-      #        uses: devops-infra/action-commit-push@master
-      #        with:
-      #          github_token: ${{ secrets.GITHUB_TOKEN }}
-      #          commit_prefix: ${{ github.event.head_commit.message }} TestsPassed
+      - name: Save SHA to file
+        if: ${{ success() }}
+        run: echo ${{ github.sha }} > sha.txt
+
+      - name: Upload SHA Artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'specific-sha'
+          path: sha.txt
 
       - name: pull-request
         if: ${{ success() }}
