@@ -159,7 +159,7 @@ public class BookService {
         book1.setId(book.getId());
         bookRepository.save(book1);
         Book book11 = bookRepository.findByUuid(book1.getBookUUID()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "book not found"));
-        return ResponseEntity.status(200).location(URI.create("http://localhost:8083/api/book/" + book11.getBookUUID())).body(book11);
+        return ResponseEntity.status(201).location(URI.create("http://localhost:8083/api/book/" + book11.getBookUUID())).body(book11);
     }
 
 
