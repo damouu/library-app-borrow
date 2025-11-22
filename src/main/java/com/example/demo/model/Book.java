@@ -30,12 +30,12 @@ public class Book {
     @Column(nullable = false, columnDefinition = "UUID", name = "book_uuid")
     @Getter
     @Setter
-    private UUID book_uuid;
+    private UUID bookUUID;
 
     @Column(nullable = false, name = "is_borrowed")
     @Getter
     @Setter
-    private boolean is_borrowed;
+    private boolean currentlyBorrowed;
 
     @Column(nullable = false, name = "added_date", columnDefinition = "timestamp")
     @JsonDeserialize(using = LocalDateDeserializer.class)
@@ -43,7 +43,7 @@ public class Book {
     @Getter(onMethod = @__(@JsonIgnore))
     @Setter
     @JsonIgnore
-    private LocalDate added_date;
+    private LocalDate addedDate;
 
     @Column(name = "deleted_at", columnDefinition = "timestamp")
     @Getter
@@ -57,9 +57,13 @@ public class Book {
 
     public Book(Integer id, UUID book_uuid, String title, boolean is_borrowed, LocalDate added_date, LocalDate deleted_at) {
         this.id = id;
-        this.book_uuid = book_uuid;
-        this.is_borrowed = is_borrowed;
-        this.added_date = added_date;
+        this.bookUUID = book_uuid;
+        this.currentlyBorrowed = is_borrowed;
+        this.addedDate = added_date;
         this.deleted_at = deleted_at;
     }
+
+    public Book(UUID uuid, String tittle, String genre, int i, String publisher, String author, LocalDate now) {
+    }
+
 }

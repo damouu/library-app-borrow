@@ -95,10 +95,10 @@ public class BookService {
         Map<String, Map<String, String>> response = new HashMap<>();
 //        if (book.getMemberCard() != null) {
 //            Map<String, String> studentCard = new HashMap<>();
-//            studentCard.put("memberCardUUID", String.valueOf(book.getMemberCard().getUuid()));
+//            studentCard.put("memberCardUUID", String.valueOf(book.getMemberCard().getBookUUID()));
 //            response.put("studentCard", studentCard);
 //        }
-//        bookData.put("UUID", String.valueOf(book.getUuid()));
+//        bookData.put("UUID", String.valueOf(book.getBookUUID()));
 //        bookData.put("author", book.getAuthor());
 //        bookData.put("genre", book.getGenre());
 //        bookData.put("publisher", book.getPublisher());
@@ -131,9 +131,9 @@ public class BookService {
      * @throws ResponseStatusException throws if the given UUID does not correspond to an existing book in the db.
      */
     public ResponseEntity<Book> postBook(Book book) {
-        book.setBook_uuid(UUID.randomUUID());
+        book.setBookUUID(UUID.randomUUID());
         bookRepository.save(book);
-        return ResponseEntity.status(201).location(URI.create("http://localhost:8083/api/book/" + book.getBook_uuid())).body(book);
+        return ResponseEntity.status(201).location(URI.create("http://localhost:8083/api/book/" + book.getBookUUID())).body(book);
     }
 
     /**
@@ -158,8 +158,8 @@ public class BookService {
         Book book1 = oMapper.convertValue(map, Book.class);
         book1.setId(book.getId());
         bookRepository.save(book1);
-        Book book11 = bookRepository.findByUuid(book1.getBook_uuid()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "book not found"));
-        return ResponseEntity.status(200).location(URI.create("http://localhost:8083/api/book/" + book11.getBook_uuid())).body(book11);
+        Book book11 = bookRepository.findByUuid(book1.getBookUUID()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "book not found"));
+        return ResponseEntity.status(200).location(URI.create("http://localhost:8083/api/book/" + book11.getBookUUID())).body(book11);
     }
 
 
@@ -179,7 +179,7 @@ public class BookService {
         Optional<BookMemberCard> bookStudent = bookStudentRepository.findBookStudentByID(book.getId());
         int status;
         String response;
-        if (bookStudent.isPresent() && bookStudent.get().getBorrow_return_date() == null) {
+        if (bookStudent.isPresent() && bookStudent.get().getBorrowReturnDate() == null) {
             status = 422;
             response = "already borrowed";
         } else {
@@ -208,9 +208,9 @@ public class BookService {
         Optional<BookMemberCard> bookStudent = bookStudentRepository.findBookStudentByID(book.getId());
         int status;
         String response;
-        if (bookStudent.isPresent() && bookStudent.get().getBorrow_return_date() == null) {
+        if (bookStudent.isPresent() && bookStudent.get().getBorrowReturnDate() == null) {
             Date borrow_request_date = new Date();
-            bookStudent.get().setBorrow_return_date(LocalDate.now());
+            bookStudent.get().setBorrowReturnDate(LocalDate.now());
             bookStudentRepository.save(bookStudent.get());
             status = 200;
             response = "book returned";
@@ -235,11 +235,11 @@ public class BookService {
         Optional<BookMemberCard> bookStudent = bookStudentRepository.findBookStudentByIDUpdate(book.getId());
         int status;
         String response;
-        if (bookStudent.isPresent() && bookStudent.get().getBorrow_return_date() == null) {
+        if (bookStudent.isPresent() && bookStudent.get().getBorrowReturnDate() == null) {
             long date = System.currentTimeMillis() + 14 * 24 * 3600 * 1000;
             Date newDate = new Date(date);
 //            bookStudent.get().setGranted_borrow_extend(true);
-            bookStudent.get().setBorrow_end_date(LocalDate.now());
+            bookStudent.get().setBorrowEndDate(LocalDate.now());
             bookStudentRepository.save(bookStudent.get());
             status = 201;
             response = "updated";

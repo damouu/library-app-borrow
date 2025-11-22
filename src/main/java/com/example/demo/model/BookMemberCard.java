@@ -39,35 +39,35 @@ public class BookMemberCard {
     @Column(columnDefinition = "UUID", name = "borrow_uuid", nullable = false)
     @Getter
     @Setter
-    private UUID borrow_uuid;
+    private UUID borrowUUID;
 
     @Column(name = "borrow_start_date", nullable = false, columnDefinition = "Date")
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonSerialize(using = LocalDateSerializer.class)
     @Getter(onMethod = @__(@JsonIgnore))
     @Setter
-    private LocalDate borrow_start_date;
+    private LocalDate borrowStartDate;
 
     @Column(name = "borrow_end_date", nullable = false, columnDefinition = "Date")
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonSerialize(using = LocalDateSerializer.class)
     @Getter(onMethod = @__(@JsonIgnore))
     @Setter
-    private LocalDate borrow_end_date;
+    private LocalDate borrowEndDate;
 
     @Column(name = "borrow_return_date", columnDefinition = "Date")
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonSerialize(using = LocalDateSerializer.class)
     @Getter(onMethod = @__(@JsonIgnore))
     @Setter
-    private LocalDate borrow_return_date;
+    private LocalDate borrowReturnDate;
 
 
     @JsonCreator
     public BookMemberCard(LocalDate borrow_start_date, LocalDate borrow_end_date, LocalDate borrow_return_date) {
-        this.borrow_start_date = borrow_start_date;
-        this.borrow_end_date = borrow_end_date;
-        this.borrow_return_date = borrow_return_date;
+        this.borrowStartDate = borrow_start_date;
+        this.borrowEndDate = borrow_end_date;
+        this.borrowReturnDate = borrow_return_date;
     }
 
 }

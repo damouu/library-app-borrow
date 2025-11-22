@@ -7,10 +7,10 @@ import com.example.demo.repository.BookRepository;
 import com.example.demo.repository.BookStudentRepository;
 import com.example.demo.repository.BorrowSummaryRepository;
 import com.example.demo.repository.MemberCardRepository;
+import com.example.demo.util.PaginationUtil;
 import com.example.demo.view.BorrowSummaryView;
 import lombok.Data;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +23,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-/**
- * The type Member card service.
- */
 @Service
 @Data
 public class MemberCardService {
@@ -39,29 +36,8 @@ public class MemberCardService {
     private final BorrowSummaryRepository borrowSummaryRepository;
 
 
-    public ResponseEntity<List<MemberCard>> getMemberCards(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<MemberCard> pages = memberCardRepository.findAll(pageable);
-        return ResponseEntity.ok(pages.toList());
-    }
-
-    public ResponseEntity<LinkedHashMap<String, Object>> getMemberCard(UUID memberCardUUID) throws ResponseStatusException {
-        LinkedHashMap<String, Object> response = new LinkedHashMap<>();
-        Optional<MemberCard> MemberCard = Optional.ofNullable(memberCardRepository.findMemberCardByUuid(memberCardUUID).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "student card does not exist")));
-//        Set<Book> book = Collections.singleton(MemberCard.get().getBooks().get(0));
-        LinkedHashMap<String, Object> data = new LinkedHashMap<>();
-        LinkedHashMap<String, Integer> list = new LinkedHashMap<>();
-//        list.put("book", book.size());
-        response.put("status", "success");
-        response.put("type", "Collection");
-        response.put("size", list);
-//        data.put("book", book);
-        response.put("data", data);
-        return ResponseEntity.status(200).body(response);
-    }
-
     public ResponseEntity deleteMemberCard(UUID memberCardUUID) throws ResponseStatusException {
-        Optional<MemberCard> memberCard = Optional.ofNullable(memberCardRepository.findMemberCardByUuid(memberCardUUID).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "student card does not exist")));
+        Optional<MemberCard> memberCard = Optional.ofNullable(memberCardRepository.findMemberCardByUuid(memberCardUUID).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "member card does not exist")));
         memberCard.get().setDeleted_at(LocalDateTime.now());
         memberCardRepository.save(memberCard.get());
         return ResponseEntity.status(204).build();
@@ -69,10 +45,10 @@ public class MemberCardService {
 
     public ResponseEntity<MemberCard> postMemberCard(UUID memberCardUUID) throws ResponseStatusException {
         MemberCard memberCard = new MemberCard(memberCardUUID);
-        memberCard.setCreated_at(LocalDateTime.now());
-        memberCard.setValid_until(LocalDateTime.now().plusYears(2));
+        memberCard.setCreatedAT(LocalDateTime.now());
+        memberCard.setValidUntil(LocalDateTime.now().plusYears(2));
         memberCardRepository.save(memberCard);
-        return ResponseEntity.status(HttpStatus.CREATED).location(URI.create("http://localhost:8083/api/studentCard/" + memberCard.getMember_card_uuid())).body(memberCard);
+        return ResponseEntity.status(HttpStatus.CREATED).location(URI.create("http://localhost:8083/api/studentCard/" + memberCard.getMemberCardUUID())).body(memberCard);
     }
 
     public ResponseEntity<HashMap<String, Object>> borrowBooks(UUID memberCardUUID, Map<Object, ArrayList<UUID>> booksArrayJson) throws ResponseStatusException {
@@ -84,12 +60,12 @@ public class MemberCardService {
             for (UUID bookUUID : booksArrayJson.get("books_UUID")) {
                 if (!bookMemberCardRepository.existsByBookIsBorrowed(bookUUID)) {
                     BookMemberCard bookMemberCard = new BookMemberCard();
-                    bookMemberCard.setBorrow_start_date(LocalDate.now());
-                    bookMemberCard.setBorrow_end_date(LocalDate.now().plusWeeks(2));
-                    bookMemberCard.setBorrow_uuid(uuid);
+                    bookMemberCard.setBorrowStartDate(LocalDate.now());
+                    bookMemberCard.setBorrowEndDate(LocalDate.now().plusWeeks(2));
+                    bookMemberCard.setBorrowUUID(uuid);
                     bookMemberCard.setMemberCard(memberCard);
                     Book book = bookRepository.findByUuid(bookUUID).get();
-                    book.set_borrowed(true);
+                    book.setCurrentlyBorrowed(true);
                     bookMemberCard.setBook(book);
                     bookRepository.save(book);
                     bookMemberCardRepository.save(bookMemberCard);
@@ -119,9 +95,10 @@ public class MemberCardService {
      * @implNote {@link #SD-234  https://damou.myjetbrains.com/youtrack/issue/SD-234/6LK444GX5Ye644GX5pys44KS6LU5Y20}
      */
     public ResponseEntity<HashMap<String, Object>> returnBorrowBooks(UUID memberCardUUID, UUID borrowUUID) throws ResponseStatusException {
+        MemberCard memberCard = memberCardRepository.findMemberCardByUuid(memberCardUUID).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "member card does not exist"));
         Optional<List<BookMemberCard>> bookMemberCard = Optional.ofNullable(bookMemberCardRepository.findBookStudentByBorrow_uuid(borrowUUID)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "borrow does not exist"));
         // 受信されたの会員番号カードと貸出の番号を合ってるなら進歩する反面合ってない状況ならエラーの外例を発生されます。。
-        if (!Objects.equals(bookMemberCard.get().get(0).getMemberCard().getMember_card_uuid().toString(), memberCardUUID.toString())) {
+        if (!Objects.equals(bookMemberCard.get().get(0).getMemberCard().getMemberCardUUID().toString(), memberCardUUID.toString())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "error");
         }
         boolean return_date_is_late = false;
@@ -131,23 +108,23 @@ public class MemberCardService {
         response.put("success", true);
         response.put("status", 200);
         // 予定されたの返すの日程を超えちゃうなら何日で数えて罰金を判断されて科します。一日の遅らすに従って五百円の金額が定められたです。
-        if (bookMemberCard.get().get(0).getBorrow_end_date().isBefore(LocalDate.now())) {
+        if (bookMemberCard.get().get(0).getBorrowEndDate().isBefore(LocalDate.now())) {
             return_date_is_late = true;
-            final long days = ChronoUnit.DAYS.between(bookMemberCard.get().get(0).getBorrow_end_date(), LocalDate.now());
+            final long days = ChronoUnit.DAYS.between(bookMemberCard.get().get(0).getBorrowEndDate(), LocalDate.now());
             message = "貸し出しされたの本は" + days + "日で遅刻を返却されましたので" + days * 500 + "円の罰金を科します。";
             response.put("message", message);
         }
         for (BookMemberCard optionalBookMemberCard : bookMemberCard.get()) {
-            optionalBookMemberCard.setBorrow_return_date(LocalDate.now());
-            optionalBookMemberCard.getBook().set_borrowed(false);
+            optionalBookMemberCard.setBorrowReturnDate(LocalDate.now());
+            optionalBookMemberCard.getBook().setCurrentlyBorrowed(false);
             bookRepository.save(optionalBookMemberCard.getBook());
             bookMemberCardRepository.save(optionalBookMemberCard);
         }
         response.put("return_lately", return_date_is_late);
         response.put("data", data);
-        data.put("start_borrow_date", String.valueOf(bookMemberCard.get().get(0).getBorrow_return_date()));
-        data.put("expected_return_borrow_date", String.valueOf(bookMemberCard.get().get(0).getBorrow_end_date()));
-        data.put("actual_return_borrow_date", String.valueOf(bookMemberCard.get().get(0).getBorrow_start_date()));
+        data.put("start_borrow_date", String.valueOf(bookMemberCard.get().get(0).getBorrowReturnDate()));
+        data.put("expected_return_borrow_date", String.valueOf(bookMemberCard.get().get(0).getBorrowEndDate()));
+        data.put("actual_return_borrow_date", String.valueOf(bookMemberCard.get().get(0).getBorrowStartDate()));
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
@@ -160,16 +137,17 @@ public class MemberCardService {
      * @throws ResponseStatusException the response status exception
      * @apiNote {@link #SD-233  https://damou.myjetbrains.com/youtrack/issue/SD-233/44Om44O844K244O844Gu5pys44Gu6LK444GX5Ye644GX5bGl5q20 }
      */
-    public ResponseEntity<HashMap<String, Object>> getHistory(UUID memberCardUUID) throws ResponseStatusException {
-        List<BorrowSummaryView> borrowSummaries = borrowSummaryRepository.findBorrowSummaries(memberCardUUID);
+    public ResponseEntity<HashMap<String, Object>> getHistory(UUID memberCardUUID, Map allParams) throws ResponseStatusException {
+        Pageable pageable = PaginationUtil.extractPage(allParams);
+        //　パジネーションのクエリーを実施です。
+        Page<BorrowSummaryView> borrowSummaries = borrowSummaryRepository.findBorrowSummaries(memberCardUUID, pageable);
         HashMap<String, Object> response = new LinkedHashMap<>();
         response.put("memberCard_UUID", memberCardUUID.toString());
         HashMap<String, Object> borrow_history = new LinkedHashMap<>();
         if (!borrowSummaries.isEmpty()) {
-            if (borrowSummaries.getFirst().getBorrowReturnDate() == null) {
-                response.put("unreturned_borrow_position", 0);
+            if (borrowSummaries.getContent().get(0).getBorrowReturnDate() == null) {
                 response.put("unreturned_borrows", true);
-                response.put("size", borrowSummaries.size());
+                response.put("unreturned_borrow_position", 0);
             }
             for (BorrowSummaryView borrowSummaryView : borrowSummaries) {
                 List<Object> books = new ArrayList<>();
@@ -192,6 +170,7 @@ public class MemberCardService {
             }
         }
         response.put("borrows_UUID", borrow_history);
+        response.put("pageable", borrowSummaries.getPageable());
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

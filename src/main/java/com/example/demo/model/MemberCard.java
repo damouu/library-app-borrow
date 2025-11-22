@@ -29,25 +29,26 @@ public class MemberCard implements Serializable {
     @Column(name = "member_card_uuid", columnDefinition = "UUID", nullable = false)
     @Getter
     @Setter
-    private UUID member_card_uuid;
+    private UUID memberCardUUID;
 
     @Column(name = "created_at", columnDefinition = "timestamp", nullable = false)
     @Getter
     @Setter
-    private LocalDateTime created_at;
+    private LocalDateTime createdAT;
 
     @Column(name = "valid_until", columnDefinition = "date", nullable = false)
     @Getter
     @Setter
-    private LocalDateTime valid_until;
+    private LocalDateTime validUntil;
 
     @Column(name = "deleted_at", columnDefinition = "timestamp")
     @Getter
     @Setter
     private LocalDateTime deleted_at;
 
+
     @JsonCreator
     public MemberCard(@JsonProperty("uuid") UUID uuid) {
-        this.member_card_uuid = uuid;
+        this.memberCardUUID = uuid;
     }
 }

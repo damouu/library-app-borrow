@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -34,11 +34,14 @@ jobs:
         run: echo "::set-output name=msg::$(mvn test -Dsurefire.useFile=false | grep 'ERROR' | head -4 | tail -1 | cut -d' ' -f2- | rev | cut -c 35- | rev)"
         id: mvn_test_error_short
 
-      - name: Running Unit/ Integration Tests
+      - name: Run Unit Tests
         id: run_tests
         run: mvn test
 
-      - uses: actions/checkout@v3
+      - name: Run Integration Tests
+        id: run_integration_tests
+        run: mvn verify
+
       - name: Create an issue
         if: ${{ failure() }}
         uses: JasonEtco/create-an-issue@v2
