@@ -2,13 +2,13 @@ name: YouTrack-Closed
 
 on:
   workflow_run:
-    workflows: [ "build-and-publish" ]
-    types:
-      - completed
+    pull_request:
+      types: [ closed ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.merged == true }}
     steps:
       - uses: bloobirds-it/action-youtrack-move@v1.0.0
         with:
