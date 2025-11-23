@@ -19,10 +19,10 @@ public interface SeriesRepository extends JpaRepository<Series, Integer>, JpaSpe
 
     Page<Series> findAll(Specification<Series> specification, Pageable pageable);
 
-    @Query("SELECT b FROM chapter b WHERE b.series = :series ORDER BY b.created_at ASC ")
+    @Query("SELECT b FROM chapter b WHERE b.series = :series ORDER BY b.createdAT ASC ")
     List<Chapter> findRecentChapterBySeries(@Param("series") Series series, Pageable pageable);
 
-    @Query("SELECT b FROM series b WHERE b.series_uuid = :seriesUUID and b.deleted_at is null ORDER BY b.created_at desc ")
+    @Query("SELECT b FROM series b WHERE b.seriesUUID = :seriesUUID and b.deleted_at is null ORDER BY b.createdAt desc ")
     Series findSeriesBySeries_uuid(UUID seriesUUID);
 
 }
