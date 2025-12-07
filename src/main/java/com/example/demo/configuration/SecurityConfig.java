@@ -16,7 +16,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .antMatchers("/api/public/**").permitAll()
                         .antMatchers("/api/membercard/**").authenticated()
-                        .anyRequest().permitAll()
                 )
                 .httpBasic().disable()
                 .formLogin().disable()
