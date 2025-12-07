@@ -34,7 +34,7 @@ jobs:
           directory: .
           dockerfile: 'docker/Dockerfile.prod'
           pushImage: true
-          image: damou/library-app-catalogue
+          image: damou/library-app-borrow
           tags: ${{ env.SHA }}
           registry: docker.io
           username: ${{ secrets.DOCKER_USERNAME }}
