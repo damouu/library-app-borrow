@@ -28,9 +28,10 @@ compose.yml
 /dist/
 /nbdist/
 /.nb-gradle/
+compose.yml
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-public_key.pem
+src/main/resources/public_key.pem
 .env
