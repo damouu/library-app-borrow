@@ -77,6 +77,6 @@ jobs:
           github-token: ${{ secrets.MyWorkflow }}
           yt-url: ${{ secrets.YOUTRACK_URL }}
           yt-token: ${{ secrets.YOUTRACK_TOKEN }}
-          yt-project-id: "LAC"
+          yt-project-id: "SD"
           yt-column-triggers: "Test"
           yt-column-target: "TestFailed"
