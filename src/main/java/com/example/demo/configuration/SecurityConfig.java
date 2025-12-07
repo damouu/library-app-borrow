@@ -15,8 +15,7 @@ public class SecurityConfig {
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
                         .antMatchers("/api/public/**").permitAll()
-                        .antMatchers("/api/memberCard/**").authenticated()
-                        .anyRequest().permitAll()
+                        .antMatchers("/api/membercard/**").authenticated()
                 )
                 .httpBasic().disable()
                 .formLogin().disable()

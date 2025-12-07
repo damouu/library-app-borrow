@@ -15,6 +15,9 @@ target/
 
 ### IntelliJ IDEA ###
 .idea
+backup.sql
+tables_export.sql
+compose.yml
 *.iws
 *.iml
 *.ipr
@@ -25,9 +28,10 @@ target/
 /dist/
 /nbdist/
 /.nb-gradle/
+compose.yml
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-public_key.pem
+src/main/resources/public_key.pem
 .env

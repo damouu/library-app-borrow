@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Download SHA Artifact
         uses: actions/download-artifact@v4
         with:
@@ -32,9 +32,9 @@ jobs:
         uses: mr-smithers-excellent/docker-build-push@v5
         with:
           directory: .
-          dockerfile: 'Dockerfile.prod'
+          dockerfile: 'docker/Dockerfile.prod'
           pushImage: true
-          image: damou/library-app-borrow
+          image: damou/library-app-catalogue
           tags: ${{ env.SHA }}
           registry: docker.io
           username: ${{ secrets.DOCKER_USERNAME }}

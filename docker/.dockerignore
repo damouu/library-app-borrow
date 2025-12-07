@@ -9,6 +9,8 @@
 .classpath
 .project
 .settings/
+.dockerignore
+docker/
 
 # Build output
 target/
