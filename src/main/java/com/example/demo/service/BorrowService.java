@@ -6,6 +6,7 @@ import com.example.demo.dto.ChapterDetails;
 import com.example.demo.model.Borrow;
 import com.example.demo.repository.BorrowRepository;
 import com.example.demo.repository.BorrowSummaryRepository;
+import com.example.demo.util.PaginationUtil;
 import com.example.demo.view.BorrowSummaryView;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.server.ResponseStatusException;
-import com.example.demo.util.PaginationUtil;
 
 import java.io.Serializable;
 import java.time.DayOfWeek;
@@ -39,7 +39,6 @@ public class BorrowService {
     private final BorrowSummaryRepository borrowSummaryRepository;
 
     private final KafkaTemplate<UUID, Object> KafkaTemplate;
-
 
     /**
      * 貸し出しの本を返却の機能性です。
@@ -75,7 +74,7 @@ public class BorrowService {
     }
 
     public ResponseEntity<?> topChapters(Map allParams, String period) {
-        LocalDate startDate = null, end = null, endDate = LocalDate.now().minusDays(1);
+        LocalDate startDate, end, endDate;
         Pageable pageable = PaginationUtil.extractPage(allParams);
 
         switch (period.toLowerCase()) {
@@ -130,8 +129,7 @@ public class BorrowService {
     }
 
 
-    /// **
-// * 会員のメンバ番号で貸し出しの履歴の機能性です。
+    // * 会員のメンバ番号で貸し出しの履歴の機能性です。
 // *
 // * @param memberCardUUID the member card uuid
 // * @return {@link ResponseEntity>} the history　of previous borrows
@@ -139,10 +137,9 @@ public class BorrowService {
 // * @apiNote {@link #SD-233  https://damou.myjetbrains.com/youtrack/issue/SD-233/44Om44O844K244O844Gu5pys44Gu6LK444GX5Ye644GX5bGl5q20 }
 // */
     public ResponseEntity<HashMap<String, Object>> getHistory(UUID memberCardUUID, Map allParams) throws ResponseStatusException {
-        String pageStr = (String) allParams.get("page");
-        String sizeStr = (String) allParams.get("size");
-        int page = Integer.parseInt(pageStr);
-        int size = Integer.parseInt(sizeStr);
+        Pageable pageable2 = PaginationUtil.extractPage(allParams);
+        int page = pageable2.getPageNumber();
+        int size = pageable2.getPageSize();
         String sortProperty = (String) allParams.get("sort");
         String sortDirection = (String) allParams.get("direction");
         Sort.Direction direction = Sort.Direction.fromString(sortDirection);
