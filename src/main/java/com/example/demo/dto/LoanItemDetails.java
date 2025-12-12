@@ -4,13 +4,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
-public class BookPayload {
+public class LoanItemDetails {
 
-    private List<LoanItemDetails> data;
+    private UUID book_uuid;
 
+    private ChapterDetails chapter;
 }

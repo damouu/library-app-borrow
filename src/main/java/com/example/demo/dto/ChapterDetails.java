@@ -21,6 +21,9 @@ public class ChapterDetails {
     @JsonProperty("chapter_uuid")
     private UUID chapterUUID;
 
+    @JsonProperty("chapter_second_title")
+    private String chapterSecondTitle;
+
     @JsonProperty("chapter_cover_url")
     private String chapterCoverUrl;
 

@@ -1,8 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.BookPayload;
-import com.example.demo.dto.ChapterBorrowCountDTO;
-import com.example.demo.dto.ChapterDetails;
+import com.example.demo.dto.*;
 import com.example.demo.model.Borrow;
 import com.example.demo.repository.BorrowRepository;
 import com.example.demo.repository.BorrowSummaryRepository;
@@ -63,14 +61,18 @@ public class BorrowService {
         UUID borrowUid = UUID.randomUUID();
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusWeeks(2);
-        List<Borrow> newBorrows = booksArrayJson.getBooks().entrySet().stream().map(entry -> {
-            String bookUuidString = String.valueOf(entry.getKey());
-            ChapterDetails details = entry.getValue();
-            return Borrow.builder().borrowStartDate(startDate).borrowEndDate(endDate).borrowUuid(borrowUid).memberCardUuid(memberCardUUID).bookUuid(UUID.fromString(bookUuidString)).chapterUUID(details.getChapterUUID()).build();
-        }).toList();
-        borrowRepository.saveAll(newBorrows);
-        KafkaTemplate.send("borrow_topic", borrowUid, booksArrayJson);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", booksArrayJson.getBooks().size() + "冊の本は貸し出しされる完了です。", "data", Map.of("borrow_UUID", borrowUid.toString(), "start_borrow_date", String.valueOf(startDate), "end_borrow_date", String.valueOf(endDate))));
+        List<UUID> booksUUID = booksArrayJson.getData().stream().map(LoanItemDetails::getBook_uuid).toList();
+        List<BookToDecrement> booksToDecrement = booksUUID.stream().map(BookToDecrement::new).toList(); // Assuming BookToDecrement has a constructor/builder
+        InventoryDataEvent inventoryData = InventoryDataEvent.builder().books(booksToDecrement).build();
+        List<ChapterDetails> chapters = booksArrayJson.getData().stream().map(LoanItemDetails::getChapter).toList();
+        NotificationDataEvent notificationData = NotificationDataEvent.builder().borrow_uuid(borrowUid).borrow_start_date(startDate.toString()).borrow_end_date(endDate.toString()).chapters(chapters).build();
+        EventData dataPayload = EventData.builder().notificationData(notificationData).inventoryData(inventoryData).build();
+        Metadata metadataPayload = Metadata.builder().event_uuid(borrowUid).event_type("LIBRARY_BORROWED").timestamp(LocalDate.now().toString()).source_service("library-app-borrow-v1").memberCardUUID(memberCardUUID).build();
+        BorrowEventPayload finalPayload = BorrowEventPayload.builder().metadata(metadataPayload).data(dataPayload).build();
+        List<Borrow> borrows = booksArrayJson.getData().stream().map(details -> Borrow.builder().borrowStartDate(startDate).borrowEndDate(endDate).borrowUuid(borrowUid).memberCardUuid(memberCardUUID).bookUuid(details.getBook_uuid()).chapterUUID(details.getChapter().getChapterUUID()).build()).toList();
+        borrowRepository.saveAll(borrows);
+        KafkaTemplate.send("library.borrow.v1", borrowUid, finalPayload);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", booksArrayJson.getData().size() + "冊の本は貸し出しされる完了です。", "data", Map.of("borrow_UUID", borrowUid.toString(), "start_borrow_date", String.valueOf(startDate), "end_borrow_date", String.valueOf(endDate))));
     }
 
     public ResponseEntity<?> topChapters(Map allParams, String period) {
@@ -124,7 +126,7 @@ public class BorrowService {
         boolean isLate = daysLate > 0;
         long fineAmount = daysLate * 500;
         borrowRepository.setReturnDateForBorrows(borrows, currentDate);
-        KafkaTemplate.send("return_topic", borrowUUID, booksArrayJson);
+        KafkaTemplate.send("library.return.v1", borrowUUID, booksArrayJson);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("borrow_UUID", borrowUUID, "return_lately", isLate, "daysLate", daysLate, "罰金", fineAmount + "円の罰金となります。")));
     }
 

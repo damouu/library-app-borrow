@@ -10,12 +10,12 @@ public class KafkaTopicBuilder {
 
     @Bean
     public NewTopic borrowTopic() {
-        return TopicBuilder.name("borrow_topic").build();
+        return TopicBuilder.name("library.borrow.v1").build();
     }
 
     @Bean
     public NewTopic returnTopic() {
-        return TopicBuilder.name("return_topic").build();
+        return TopicBuilder.name("library.return.v1").build();
     }
 
 }
