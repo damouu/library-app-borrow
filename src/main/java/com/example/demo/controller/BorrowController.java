@@ -1,7 +1,8 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.BookPayload;
-import com.example.demo.service.BorrowService;
+import com.example.demo.service.LoanQueryService;
+import com.example.demo.service.LoanService;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,7 +24,9 @@ import java.util.UUID;
 @RequestMapping("api/")
 public class BorrowController {
 
-    private final BorrowService borrowService;
+    private final LoanService loanService;
+
+    private final LoanQueryService loanQueryService;
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping(path = "/membercard/{memberCardUUID}/borrow", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -35,12 +38,12 @@ public class BorrowController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "memberCard UUID mismatch");
         }
 
-        return borrowService.borrowBooks(memberCardUUID, booksArrayJson);
+        return loanService.borrowBooks(memberCardUUID, booksArrayJson);
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping(path = "/membercard/{memberCardUUID}/borrow/{borrowUUID}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> returnBorrowBooks(@PathVariable("memberCardUUID") UUID memberCardUUID, @PathVariable("borrowUUID") UUID borrowUUID, @RequestBody BookPayload booksArrayJson, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<?> returnBorrowBooks(@PathVariable UUID memberCardUUID, @PathVariable UUID borrowUUID, @RequestBody BookPayload booksArrayJson, @AuthenticationPrincipal Jwt jwt) {
 
         String jwtMemberCard = jwt.getClaimAsString("user_memberCardUUID");
 
@@ -48,12 +51,12 @@ public class BorrowController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "memberCard UUID mismatch");
         }
 
-        return borrowService.returnBorrowBooks(memberCardUUID, borrowUUID, booksArrayJson);
+        return loanService.returnBorrowBooks(memberCardUUID, borrowUUID, booksArrayJson);
     }
 
     @GetMapping(path = "public/borrow/top-chapters", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> returnBorrowBooks(@RequestParam Map<String, ?> allParams, @RequestParam(defaultValue = "currentweek") String period) {
-        return borrowService.topChapters(allParams, period);
+        return loanQueryService.topChapters(allParams, period);
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -66,7 +69,7 @@ public class BorrowController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "memberCard UUID mismatch");
         }
 
-        return borrowService.getHistory(memberCardUUID, allParams);
+        return loanQueryService.getHistory(memberCardUUID, allParams);
     }
 
 }

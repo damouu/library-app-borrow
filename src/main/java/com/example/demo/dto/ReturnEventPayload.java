@@ -10,9 +10,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BorrowEventPayload {
+public class ReturnEventPayload {
 
     private Metadata metadata;
 
-    private BorrowEventData data;
+    private ReturnEventData data;
 }
