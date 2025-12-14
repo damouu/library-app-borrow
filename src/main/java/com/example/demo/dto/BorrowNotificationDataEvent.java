@@ -14,7 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class NotificationDataEvent {
+public class BorrowNotificationDataEvent {
 
     private UUID borrow_uuid;
     private String borrow_start_date;
