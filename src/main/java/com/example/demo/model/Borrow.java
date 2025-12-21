@@ -26,44 +26,33 @@ public class Borrow {
     @SequenceGenerator(name = "book_sequence", allocationSize = 1, sequenceName = "book_sequence")
     private int id;
 
-    @Column(nullable = false, columnDefinition = "UUID", name = "book_uuid")
-    @Getter
-    @Setter
+     @Column(nullable = false, updatable = false)
     private UUID bookUuid;
 
-    @Column(nullable = false, columnDefinition = "UUID", name = "chapter_uuid")
-    @Getter
-    @Setter
-    private UUID chapterUUID;
+    @Column(nullable = false, updatable = false)
+    private UUID chapterUuid;
 
-    @Getter
-    @Setter
+    @Column(nullable = false, updatable = false)
     private UUID memberCardUuid;
 
-    @Getter
-    @Setter
+    @Column(nullable = false, updatable = false)
     private UUID borrowUuid;
 
-
-    @Column(name = "borrow_start_date", nullable = false, columnDefinition = "Date")
+    @Column(nullable = false, updatable = false)
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonSerialize(using = LocalDateSerializer.class)
     @Getter(onMethod = @__(@JsonIgnore))
-    @Setter
     private LocalDate borrowStartDate;
 
-    @Column(name = "borrow_end_date", nullable = false, columnDefinition = "Date")
+    @Column(nullable = false, updatable = false)
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonSerialize(using = LocalDateSerializer.class)
     @Getter(onMethod = @__(@JsonIgnore))
-    @Setter
     private LocalDate borrowEndDate;
 
-    @Column(name = "borrow_return_date", columnDefinition = "Date")
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonSerialize(using = LocalDateSerializer.class)
     @Getter(onMethod = @__(@JsonIgnore))
-    @Setter
     private LocalDate borrowReturnDate;
 
 }
