@@ -1,8 +1,6 @@
 package com.example.demo.repository;
 
-import com.example.demo.dto.ChapterBorrowCountDTO;
 import com.example.demo.model.Borrow;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -30,8 +28,5 @@ public interface BorrowRepository extends JpaRepository<Borrow, Integer>, JpaSpe
     @Modifying
     @Query("UPDATE Borrow b SET b.borrowReturnDate = :returnDate WHERE b IN :borrows")
     void setReturnDateForBorrows(List<Borrow> borrows, LocalDate returnDate);
-
-    @Query("SELECT new com.example.demo.dto.ChapterBorrowCountDTO(b.chapterUUID, COUNT(b.id)) " + "FROM Borrow b " + "WHERE b.borrowStartDate BETWEEN :startWeek AND :endWeek " + "GROUP BY b.chapterUUID " + "ORDER BY COUNT(b.id) DESC")
-    List<ChapterBorrowCountDTO> getTopBorrowedChapters(@Param("startWeek") LocalDate startWeek, @Param("endWeek") LocalDate endWeek, Pageable pageable);
 
 }

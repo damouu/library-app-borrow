@@ -5,7 +5,6 @@ import com.example.demo.dto.BorrowEventPayload;
 import com.example.demo.dto.ReturnEventPayload;
 import com.example.demo.model.Borrow;
 import com.example.demo.repository.BorrowRepository;
-import com.example.demo.repository.BorrowSummaryRepository;
 import com.example.demo.util.DateCalculationUtil;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +18,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -32,8 +29,6 @@ import java.util.UUID;
 public class LoanService {
 
     private final BorrowRepository borrowRepository;
-
-    private final BorrowSummaryRepository borrowSummaryRepository;
 
     private final KafkaTemplate<UUID, Object> KafkaTemplate;
 
