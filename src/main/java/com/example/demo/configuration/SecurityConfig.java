@@ -11,15 +11,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf().disable()
-                .authorizeHttpRequests(auth -> auth
-                        .antMatchers("/api/public/**").permitAll()
-                        .antMatchers("/api/membercard/**").authenticated()
-                )
-                .httpBasic().disable()
-                .formLogin().disable()
-                .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);
+        http.csrf().disable().authorizeHttpRequests(auth -> auth.antMatchers("/api/membercard/**").authenticated()).httpBasic().disable().formLogin().disable().oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);
         return http.build();
     }
 }
