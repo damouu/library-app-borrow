@@ -1,10 +1,21 @@
 FROM maven:3.9-eclipse-temurin-21
 
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-COPY .. .
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar /opt/otel-agent.jar
 
-# Optional: download deps first
-RUN mvn dependency:go-offline
+COPY pom.xml .
 
-CMD ["mvn", "spring-boot:run"]
+RUN mvn dependency:go-offline -B
+
+COPY . .
+
+RUN mvn clean package -DskipTests
+
+ENV JAVA_TOOL_OPTIONS="-javaagent:/opt/otel-agent.jar"
+
+EXPOSE 8083
+
+CMD ["java", "-jar", "target/borrow-service-2.0.0-SNAPSHOT.jar", "--server.port=8083"]
