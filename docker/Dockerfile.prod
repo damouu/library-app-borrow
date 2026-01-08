@@ -3,30 +3,31 @@
 # ==============================
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 
-# Set working directory
 WORKDIR /app
 
-# Copy pom.xml and resolve dependencies (caches dependencies)
-COPY ../pom.xml .
+COPY pom.xml .
+
 RUN mvn dependency:go-offline
 
-# Copy source code and build the jar
-COPY ../src ./src
+COPY src ./src
+
 RUN mvn clean package -DskipTests
 
 # ==============================
-# Stage 2: Run JRE 21
+# Stage 2: Run
 # ==============================
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre-jammy
 
-# Set working directory
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Copy the jar file from build stage
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar /opt/otel-agent.jar
+
 COPY --from=build /app/target/*.jar app.jar
 
-# Expose port 8080
+ENV JAVA_TOOL_OPTIONS="-javaagent:/opt/otel-agent.jar"
+
 EXPOSE 8080
 
-# Run the application
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
