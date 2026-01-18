@@ -6,7 +6,6 @@ import com.example.demo.dto.ReturnEventPayload;
 import com.example.demo.model.Borrow;
 import com.example.demo.repository.BorrowRepository;
 import com.example.demo.util.DateCalculationUtil;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@Data
 @Service
 @RequiredArgsConstructor
 public class LoanService {
@@ -83,7 +81,6 @@ public class LoanService {
         if (borrows.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", Map.of("dede", "該当する貸し出しが見つかりませんでした。")));
         }
-
         LocalDate borrowEndDate = borrows.getFirst().getBorrowEndDate();
         long daysLate = DateCalculationUtil.calculateWorkingDays(borrowEndDate.plusDays(1), currentDate);
         boolean isLate = daysLate > 0;
