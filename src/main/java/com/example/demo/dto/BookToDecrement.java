@@ -6,7 +6,6 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookToDecrement {

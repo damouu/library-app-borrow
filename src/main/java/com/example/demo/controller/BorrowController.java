@@ -2,7 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.BookPayload;
 import com.example.demo.service.LoanService;
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +16,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Map;
 import java.util.UUID;
 
-@Data
 @Validated
 @RestController
+@RequiredArgsConstructor
 @CrossOrigin(allowedHeaders = "*", origins = "*", methods = {RequestMethod.POST})
 @RequestMapping("api/membercard/")
 public class BorrowController {
