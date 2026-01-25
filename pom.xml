@@ -14,9 +14,10 @@
     <artifactId>borrow-service</artifactId>
     <version>2.0.0-SNAPSHOT</version>
 
-    <name>図書館 Borrow Service</name>
+    <name>図書館システム 貸出サービス</name>
     <description>
-        図書館システムの貸し出しを提供し、 フロントエンドに貸し出し状況を変更しや歴史のユーザーの借りた本を供給するAPI。
+        図書館システムにおける書籍の貸出・返却を管理するサービスです。
+        REST API を通じて貸出状態を提供し、貸出・返却イベントを Kafka に発行します。
     </description>
 
     <properties>
