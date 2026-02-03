@@ -19,14 +19,13 @@ import java.util.UUID;
 @Validated
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(allowedHeaders = "*", origins = "*", methods = {RequestMethod.POST})
-@RequestMapping("api/membercard/")
+@RequestMapping("/auth/")
 public class BorrowController {
 
     private final LoanService loanService;
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping(path = "{memberCardUUID}/borrow", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = "{memberCardUUID}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> postBorrowBooks(@PathVariable UUID memberCardUUID, @RequestBody BookPayload booksArrayJson, @AuthenticationPrincipal Jwt jwt) {
 
         String jwtMemberCard = jwt.getClaimAsString("user_memberCardUUID");
