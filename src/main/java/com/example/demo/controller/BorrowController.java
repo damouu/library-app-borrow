@@ -19,14 +19,13 @@ import java.util.UUID;
 @Validated
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/auth/")
 public class BorrowController {
 
     private final LoanService loanService;
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping(path = "{memberCardUUID}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> postBorrowBooks(@PathVariable UUID memberCardUUID, @RequestBody BookPayload booksArrayJson, @AuthenticationPrincipal Jwt jwt) {
+    @PostMapping(path = "/books", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> postBorrowBooks(@RequestBody BookPayload booksArrayJson, @AuthenticationPrincipal Jwt jwt, @RequestHeader("X-User-UUID") UUID memberCardUUID) {
 
         String jwtMemberCard = jwt.getClaimAsString("user_memberCardUUID");
 
@@ -38,8 +37,8 @@ public class BorrowController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping(path = "{memberCardUUID}/borrow/{borrowUUID}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> returnBorrowBooks(@PathVariable UUID memberCardUUID, @PathVariable UUID borrowUUID, @RequestBody BookPayload booksArrayJson, @AuthenticationPrincipal Jwt jwt) {
+    @PostMapping(path = "/{borrowUUID}/return", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> returnBorrowBooks(@RequestHeader("X-User-UUID") UUID memberCardUUID, @PathVariable UUID borrowUUID, @RequestBody BookPayload booksArrayJson, @AuthenticationPrincipal Jwt jwt) {
 
         String jwtMemberCard = jwt.getClaimAsString("user_memberCardUUID");
 
