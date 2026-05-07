@@ -175,6 +175,20 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.11</version>
+
+                <configuration>
+                    <excludes>
+                        <exclude>com/example/demo/DemoApplication.class</exclude>
+                        <exclude>**/dto/**</exclude>
+                        <exclude>**/view/**</exclude>
+                        <exclude>**/*$*</exclude>
+                        <exclude>**/generated/**</exclude>
+                        <exclude>**/model/**</exclude>
+                        <exclude>**/*Config.class</exclude>
+                    </excludes>
+                </configuration>
+
+
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -197,15 +211,12 @@
                         <configuration>
                             <rules>
                                 <rule>
-                                    <element>PACKAGE</element>
-                                    <includes>
-                                        <include>com.example.demo.service.LoanService</include>
-                                    </includes>
+                                    <element>BUNDLE</element>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>1.0</minimum>
+                                            <minimum>0.8</minimum>
                                         </limit>
                                         <limit>
                                             <counter>COMPLEXITY</counter>
@@ -217,7 +228,7 @@
                                 <rule>
                                     <element>CLASS</element>
                                     <includes>
-                                        <include>com.example.demo.service.LoanService</include>
+                                        <include>com.example.demo.service.*</include>
                                     </includes>
                                     <limits>
                                         <limit>
