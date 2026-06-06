@@ -13,33 +13,23 @@ import java.util.UUID;
 public class KafkaPayloadBuilderService {
 
     public BorrowEventPayload buildBorrowPayload(UUID memberCardUUID, BookPayload booksArrayJson, UUID borrowUid, String eventType, String sourceService, LocalDate startDate, LocalDate endDate) {
-        List<BookToDecrement> booksToProcess = booksArrayJson.getData().stream().map(details -> new BookToDecrement(details.getBook_uuid())).toList();
-
-        InventoryDataEvent inventoryData = InventoryDataEvent.builder().books(booksToProcess).build();
 
         List<ChapterDetails> chapters = booksArrayJson.getData().stream().map(LoanItemDetails::getChapter).toList();
 
-        BorrowNotificationDataEvent notificationData = BorrowNotificationDataEvent.builder().borrow_uuid(borrowUid).borrow_start_date(startDate.toString()).borrow_end_date(endDate.toString()).chapters(chapters).build();
+        BorrowEventData dataPayload = BorrowEventData.builder().memberCardUUID(memberCardUUID).borrow_uuid(borrowUid).borrow_start_date(String.valueOf(startDate)).borrow_end_date(String.valueOf(endDate)).borrowed_chapters(chapters).build();
 
-        BorrowEventData dataPayload = BorrowEventData.builder().notificationData(notificationData).inventoryData(inventoryData).build();
-
-        Metadata metadataPayload = Metadata.builder().event_uuid(borrowUid).event_type(eventType).timestamp(LocalDate.now().toString()).source_service(sourceService).memberCardUUID(memberCardUUID).build();
+        Metadata metadataPayload = Metadata.builder().event_uuid(borrowUid).event_type(eventType).timestamp(LocalDate.now().toString()).source_service(sourceService).build();
 
         return BorrowEventPayload.builder().metadata(metadataPayload).data(dataPayload).build();
     }
 
     public ReturnEventPayload buildReturnPayload(UUID memberCardUUID, BookPayload booksArrayJson, UUID borrowUid, String eventType, String sourceService, LocalDate startDate, LocalDate endDate, LocalDate returnDate, Boolean returnLately, Long daysLate, BigDecimal lateFee) {
+
         List<BookToDecrement> booksToProcess = booksArrayJson.getData().stream().map(details -> new BookToDecrement(details.getBook_uuid())).toList();
 
-        InventoryDataEvent inventoryData = InventoryDataEvent.builder().books(booksToProcess).build();
+        ReturnEventData dataPayload = ReturnEventData.builder().memberCardUUID(memberCardUUID).borrow_uuid(borrowUid).borrow_start_date(String.valueOf(startDate)).borrow_end_date(String.valueOf(endDate)).borrow_return_date(String.valueOf(returnDate)).return_lately(returnLately).days_late(Math.toIntExact(daysLate)).late_fee(lateFee).returned_books(booksToProcess).build();
 
-        List<ChapterDetails> chapters = booksArrayJson.getData().stream().map(LoanItemDetails::getChapter).toList();
-
-        ReturnNotificationDataEvent returnNotificationDataEvent = ReturnNotificationDataEvent.builder().borrow_uuid(borrowUid).borrow_start_date(startDate.toString()).borrow_end_date(endDate.toString()).borrow_return_date(returnDate.toString()).return_lately(returnLately).days_late(Math.toIntExact(daysLate)).late_fee(lateFee).chapters(chapters).build();
-
-        ReturnEventData dataPayload = ReturnEventData.builder().returnNotificationDataEvent(returnNotificationDataEvent).inventoryData(inventoryData).build();
-
-        Metadata metadataPayload = Metadata.builder().event_uuid(borrowUid).event_type(eventType).timestamp(LocalDate.now().toString()).source_service(sourceService).memberCardUUID(memberCardUUID).build();
+        Metadata metadataPayload = Metadata.builder().event_uuid(borrowUid).event_type(eventType).timestamp(LocalDate.now().toString()).source_service(sourceService).build();
 
         return ReturnEventPayload.builder().metadata(metadataPayload).data(dataPayload).build();
     }
