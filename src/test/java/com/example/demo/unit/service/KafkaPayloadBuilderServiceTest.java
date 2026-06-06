@@ -38,12 +38,11 @@ class KafkaPayloadBuilderServiceTest {
     void testBuildBorrowPayload() {
         BorrowEventPayload borrowEventPayload = kafkaPayloadBuilderService.buildBorrowPayload(memberCardUUID, bookPayload, borrowUUID, "BORROW_TYPE", "BORROW", LocalDate.now(), LocalDate.now().plusWeeks(2));
         Assertions.assertEquals(borrowUUID, borrowEventPayload.getMetadata().getEvent_uuid());
-        Assertions.assertEquals(memberCardUUID, borrowEventPayload.getMetadata().getMemberCardUUID());
         Assertions.assertEquals("BORROW_TYPE", borrowEventPayload.getMetadata().getEvent_type());
         Assertions.assertEquals("BORROW", borrowEventPayload.getMetadata().getSource_service());
-        Assertions.assertNotNull(borrowEventPayload.getData().getInventoryData().getBooks());
-        Assertions.assertNotNull(borrowEventPayload.getData().getNotificationData().getChapters());
-        Assertions.assertSame(borrowUUID, borrowEventPayload.getData().getNotificationData().getBorrow_uuid());
+        Assertions.assertNotNull(borrowEventPayload.getData().getBorrowed_chapters());
+        Assertions.assertEquals(memberCardUUID, borrowEventPayload.getData().getMemberCardUUID());
+        Assertions.assertSame(borrowUUID, borrowEventPayload.getData().getBorrow_uuid());
     }
 
     @Test
@@ -52,14 +51,13 @@ class KafkaPayloadBuilderServiceTest {
         Long daysLate = 0L;
         ReturnEventPayload returnEventPayload = kafkaPayloadBuilderService.buildReturnPayload(memberCardUUID, bookPayload, borrowUUID, "RETURN_TYPE", "BORROW", LocalDate.now(), LocalDate.now().plusWeeks(2), LocalDate.now().plusDays(2), false, daysLate, BigDecimal.ZERO);
         Assertions.assertEquals(borrowUUID, returnEventPayload.getMetadata().getEvent_uuid());
-        Assertions.assertEquals(memberCardUUID, returnEventPayload.getMetadata().getMemberCardUUID());
+        Assertions.assertEquals(memberCardUUID, returnEventPayload.getData().getMemberCardUUID());
         Assertions.assertEquals("RETURN_TYPE", returnEventPayload.getMetadata().getEvent_type());
         Assertions.assertEquals("BORROW", returnEventPayload.getMetadata().getSource_service());
-        Assertions.assertNotNull(returnEventPayload.getData().getInventoryData().getBooks());
-        Assertions.assertNotNull(returnEventPayload.getData().getReturnNotificationDataEvent().getChapters());
-        Assertions.assertSame(borrowUUID, returnEventPayload.getData().getReturnNotificationDataEvent().getBorrow_uuid());
-        Assertions.assertFalse(returnEventPayload.getData().getReturnNotificationDataEvent().getReturn_lately());
-        Assertions.assertEquals(daysLate.compareTo(Long.valueOf(returnEventPayload.getData().getReturnNotificationDataEvent().getDays_late())), returnEventPayload.getData().getReturnNotificationDataEvent().getDays_late());
+        Assertions.assertNotNull(returnEventPayload.getData().getReturned_books());
+        Assertions.assertNotNull(returnEventPayload.getData().getReturn_lately());
+        Assertions.assertSame(borrowUUID, returnEventPayload.getData().getBorrow_uuid());
+        Assertions.assertFalse(returnEventPayload.getData().getReturn_lately());
     }
 
     @Test
@@ -68,15 +66,14 @@ class KafkaPayloadBuilderServiceTest {
         Long daysLate = 5L;
         ReturnEventPayload returnEventPayload = kafkaPayloadBuilderService.buildReturnPayload(memberCardUUID, bookPayload, borrowUUID, "RETURN_TYPE", "BORROW", LocalDate.now(), LocalDate.now().plusWeeks(2), LocalDate.now().plusDays(2), true, daysLate, BigDecimal.valueOf(500));
         Assertions.assertEquals(borrowUUID, returnEventPayload.getMetadata().getEvent_uuid());
-        Assertions.assertEquals(memberCardUUID, returnEventPayload.getMetadata().getMemberCardUUID());
+        Assertions.assertEquals(memberCardUUID, returnEventPayload.getData().getMemberCardUUID());
         Assertions.assertEquals("RETURN_TYPE", returnEventPayload.getMetadata().getEvent_type());
         Assertions.assertEquals("BORROW", returnEventPayload.getMetadata().getSource_service());
-        Assertions.assertNotNull(returnEventPayload.getData().getInventoryData().getBooks());
-        Assertions.assertNotNull(returnEventPayload.getData().getReturnNotificationDataEvent().getChapters());
-        Assertions.assertSame(borrowUUID, returnEventPayload.getData().getReturnNotificationDataEvent().getBorrow_uuid());
-        Assertions.assertTrue(returnEventPayload.getData().getReturnNotificationDataEvent().getReturn_lately());
-        Assertions.assertEquals(5, returnEventPayload.getData().getReturnNotificationDataEvent().getDays_late());
-        Assertions.assertEquals(BigDecimal.valueOf(500), returnEventPayload.getData().getReturnNotificationDataEvent().getLate_fee());
+        Assertions.assertNotNull(returnEventPayload.getData().getReturned_books());
+        Assertions.assertSame(borrowUUID, returnEventPayload.getData().getBorrow_uuid());
+        Assertions.assertTrue(returnEventPayload.getData().getReturn_lately());
+        Assertions.assertEquals(5, returnEventPayload.getData().getDays_late());
+        Assertions.assertEquals(BigDecimal.valueOf(500), returnEventPayload.getData().getLate_fee());
     }
 
     @Test

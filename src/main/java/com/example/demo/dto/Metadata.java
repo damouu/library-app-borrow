@@ -12,7 +12,6 @@ import java.util.UUID;
 public class Metadata {
 
     private String timestamp;
-    private UUID memberCardUUID;
     private String source_service;
     private String event_type;
     private UUID event_uuid;

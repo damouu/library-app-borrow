@@ -1,8 +1,10 @@
 package com.example.demo.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -12,9 +14,12 @@ import lombok.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BorrowEventData {
 
-    @JsonProperty("notification_data")
-    private BorrowNotificationDataEvent notificationData;
+    private UUID memberCardUUID;
+    private UUID borrow_uuid;
+    private String borrow_start_date;
+    private String borrow_end_date;
 
-    @JsonProperty("inventory_data")
-    private InventoryDataEvent inventoryData;
+    private List<ChapterDetails> borrowed_chapters;
+
+
 }
