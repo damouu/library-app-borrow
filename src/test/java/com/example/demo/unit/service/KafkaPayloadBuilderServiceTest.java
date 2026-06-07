@@ -40,8 +40,8 @@ class KafkaPayloadBuilderServiceTest {
         Assertions.assertEquals(borrowUUID, borrowEventPayload.getMetadata().getEvent_uuid());
         Assertions.assertEquals("BORROW_TYPE", borrowEventPayload.getMetadata().getEvent_type());
         Assertions.assertEquals("BORROW", borrowEventPayload.getMetadata().getSource_service());
-        Assertions.assertNotNull(borrowEventPayload.getData().getBorrowed_chapters());
-        Assertions.assertEquals(memberCardUUID, borrowEventPayload.getData().getMemberCardUUID());
+        Assertions.assertNotNull(borrowEventPayload.getData().getBorrowed_items());
+        Assertions.assertEquals(memberCardUUID, borrowEventPayload.getData().getMember_card_uuid());
         Assertions.assertSame(borrowUUID, borrowEventPayload.getData().getBorrow_uuid());
     }
 
@@ -51,10 +51,10 @@ class KafkaPayloadBuilderServiceTest {
         Long daysLate = 0L;
         ReturnEventPayload returnEventPayload = kafkaPayloadBuilderService.buildReturnPayload(memberCardUUID, bookPayload, borrowUUID, "RETURN_TYPE", "BORROW", LocalDate.now(), LocalDate.now().plusWeeks(2), LocalDate.now().plusDays(2), false, daysLate, BigDecimal.ZERO);
         Assertions.assertEquals(borrowUUID, returnEventPayload.getMetadata().getEvent_uuid());
-        Assertions.assertEquals(memberCardUUID, returnEventPayload.getData().getMemberCardUUID());
+        Assertions.assertEquals(memberCardUUID, returnEventPayload.getData().getMember_card_uuid());
         Assertions.assertEquals("RETURN_TYPE", returnEventPayload.getMetadata().getEvent_type());
         Assertions.assertEquals("BORROW", returnEventPayload.getMetadata().getSource_service());
-        Assertions.assertNotNull(returnEventPayload.getData().getReturned_books());
+        Assertions.assertNotNull(returnEventPayload.getData().getReturned_items());
         Assertions.assertNotNull(returnEventPayload.getData().getReturn_lately());
         Assertions.assertSame(borrowUUID, returnEventPayload.getData().getBorrow_uuid());
         Assertions.assertFalse(returnEventPayload.getData().getReturn_lately());
@@ -66,10 +66,10 @@ class KafkaPayloadBuilderServiceTest {
         Long daysLate = 5L;
         ReturnEventPayload returnEventPayload = kafkaPayloadBuilderService.buildReturnPayload(memberCardUUID, bookPayload, borrowUUID, "RETURN_TYPE", "BORROW", LocalDate.now(), LocalDate.now().plusWeeks(2), LocalDate.now().plusDays(2), true, daysLate, BigDecimal.valueOf(500));
         Assertions.assertEquals(borrowUUID, returnEventPayload.getMetadata().getEvent_uuid());
-        Assertions.assertEquals(memberCardUUID, returnEventPayload.getData().getMemberCardUUID());
+        Assertions.assertEquals(memberCardUUID, returnEventPayload.getData().getMember_card_uuid());
         Assertions.assertEquals("RETURN_TYPE", returnEventPayload.getMetadata().getEvent_type());
         Assertions.assertEquals("BORROW", returnEventPayload.getMetadata().getSource_service());
-        Assertions.assertNotNull(returnEventPayload.getData().getReturned_books());
+        Assertions.assertNotNull(returnEventPayload.getData().getReturned_items());
         Assertions.assertSame(borrowUUID, returnEventPayload.getData().getBorrow_uuid());
         Assertions.assertTrue(returnEventPayload.getData().getReturn_lately());
         Assertions.assertEquals(5, returnEventPayload.getData().getDays_late());
