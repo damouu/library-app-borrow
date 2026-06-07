@@ -13,5 +13,6 @@ public class LoanItemDetails {
 
     private UUID book_uuid;
 
-    private ChapterDetails chapter;
+    private UUID chapter_uuid;
+
 }
