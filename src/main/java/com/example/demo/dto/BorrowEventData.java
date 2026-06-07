@@ -14,12 +14,12 @@ import java.util.UUID;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BorrowEventData {
 
-    private UUID memberCardUUID;
+    private UUID member_card_uuid;
     private UUID borrow_uuid;
     private String borrow_start_date;
     private String borrow_end_date;
 
-    private List<ChapterDetails> borrowed_chapters;
+    private List<BookChapterReference> borrowed_items;
 
 
 }
