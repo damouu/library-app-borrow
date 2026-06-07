@@ -15,7 +15,7 @@ import java.util.UUID;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReturnEventData {
 
-    private UUID memberCardUUID;
+    private UUID member_card_uuid;
     private UUID borrow_uuid;
     private String borrow_start_date;
     private String borrow_end_date;
@@ -24,5 +24,5 @@ public class ReturnEventData {
     private Integer days_late;
     private BigDecimal late_fee;
 
-    private List<BookToDecrement> returned_books;
+    private List<BookToDecrement> returned_items;
 }
