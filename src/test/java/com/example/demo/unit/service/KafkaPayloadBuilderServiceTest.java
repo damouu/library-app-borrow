@@ -3,6 +3,8 @@ package com.example.demo.unit.service;
 import com.example.demo.dto.BookPayload;
 import com.example.demo.dto.BorrowEventPayload;
 import com.example.demo.dto.ReturnEventPayload;
+import com.example.demo.mapper.BorrowMapper;
+import com.example.demo.mapper.ReturnMapper;
 import com.example.demo.model.Borrow;
 import com.example.demo.service.KafkaPayloadBuilderService;
 import org.instancio.Instancio;
@@ -30,7 +32,7 @@ class KafkaPayloadBuilderServiceTest {
         memberCardUUID = UUID.randomUUID();
         borrowUUID = UUID.randomUUID();
         bookPayload = Instancio.create(BookPayload.class);
-        kafkaPayloadBuilderService = new KafkaPayloadBuilderService();
+        kafkaPayloadBuilderService = new KafkaPayloadBuilderService(new BorrowMapper(), new ReturnMapper());
     }
 
     @Test
