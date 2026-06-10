@@ -27,11 +27,11 @@ public class BorrowController {
     @PostMapping(path = "/books", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> postBorrowBooks(@RequestBody BookPayload booksArrayJson, @AuthenticationPrincipal Jwt jwt, @RequestHeader("X-User-UUID") UUID memberCardUUID) {
 
-//        String jwtMemberCard = jwt.getClaimAsString("user_memberCardUUID");
-//
-//        if (!jwtMemberCard.equals(memberCardUUID.toString())) {
-//            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "memberCard UUID mismatch");
-//        }
+        String jwtMemberCard = jwt.getClaimAsString("user_memberCardUUID");
+
+        if (!jwtMemberCard.equals(memberCardUUID.toString())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "memberCard UUID mismatch");
+        }
 
         return loanService.borrowBooks(memberCardUUID, booksArrayJson);
     }
