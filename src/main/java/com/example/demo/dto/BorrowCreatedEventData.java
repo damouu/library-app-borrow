@@ -12,7 +12,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BorrowEventData {
+public class BorrowCreatedEventData {
 
     private UUID member_card_uuid;
     private UUID borrow_uuid;

@@ -1,7 +1,7 @@
 package com.example.demo.unit.service;
 
 import com.example.demo.dto.BookPayload;
-import com.example.demo.dto.BorrowEventPayload;
+import com.example.demo.dto.BorrowCreatedEvent;
 import com.example.demo.dto.ReturnEventPayload;
 import com.example.demo.mapper.BorrowMapper;
 import com.example.demo.mapper.ReturnMapper;
@@ -38,13 +38,13 @@ class KafkaPayloadBuilderServiceTest {
     @Test
     @DisplayName("Should build borrow Kafka payload with borrow metadata and inventory data")
     void testBuildBorrowPayload() {
-        BorrowEventPayload borrowEventPayload = kafkaPayloadBuilderService.buildBorrowPayload(memberCardUUID, bookPayload, borrowUUID, "BORROW_TYPE", "BORROW", LocalDate.now(), LocalDate.now().plusWeeks(2));
-        Assertions.assertEquals(borrowUUID, borrowEventPayload.getMetadata().getEvent_uuid());
-        Assertions.assertEquals("BORROW_TYPE", borrowEventPayload.getMetadata().getEvent_type());
-        Assertions.assertEquals("BORROW", borrowEventPayload.getMetadata().getSource_service());
-        Assertions.assertNotNull(borrowEventPayload.getData().getBorrowed_items());
-        Assertions.assertEquals(memberCardUUID, borrowEventPayload.getData().getMember_card_uuid());
-        Assertions.assertSame(borrowUUID, borrowEventPayload.getData().getBorrow_uuid());
+        BorrowCreatedEvent borrowCreatedEvent = kafkaPayloadBuilderService.buildBorrowPayload(memberCardUUID, bookPayload, borrowUUID, "BORROW_TYPE", "BORROW", LocalDate.now(), LocalDate.now().plusWeeks(2));
+        Assertions.assertEquals(borrowUUID, borrowCreatedEvent.getMetadata().getEvent_uuid());
+        Assertions.assertEquals("BORROW_TYPE", borrowCreatedEvent.getMetadata().getEvent_type());
+        Assertions.assertEquals("BORROW", borrowCreatedEvent.getMetadata().getSource_service());
+        Assertions.assertNotNull(borrowCreatedEvent.getData().getBorrowed_items());
+        Assertions.assertEquals(memberCardUUID, borrowCreatedEvent.getData().getMember_card_uuid());
+        Assertions.assertSame(borrowUUID, borrowCreatedEvent.getData().getBorrow_uuid());
     }
 
     @Test

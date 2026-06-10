@@ -1,7 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.BookPayload;
-import com.example.demo.dto.BorrowEventPayload;
+import com.example.demo.dto.BorrowCreatedEvent;
 import com.example.demo.dto.ReturnEventPayload;
 import com.example.demo.model.Borrow;
 import com.example.demo.repository.BorrowRepository;
@@ -57,7 +57,7 @@ public class LoanService {
         UUID borrowUid = UUID.randomUUID();
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusWeeks(2);
-        BorrowEventPayload finalPayload = payloadBuilderService.buildBorrowPayload(memberCardUUID, booksArrayJson, borrowUid, "LIBRARY_BORROWED", "library-app-borrow-v1", startDate, endDate);
+        BorrowCreatedEvent finalPayload = payloadBuilderService.buildBorrowPayload(memberCardUUID, booksArrayJson, borrowUid, "LIBRARY_BORROWED", "library-app-borrow-v1", startDate, endDate);
         List<Borrow> borrows = payloadBuilderService.buildBorrowEntities(booksArrayJson, borrowUid, memberCardUUID, startDate, endDate);
         borrowRepository.saveAll(borrows);
         KafkaTemplate.send("library.borrow.v1", borrowUid, finalPayload);

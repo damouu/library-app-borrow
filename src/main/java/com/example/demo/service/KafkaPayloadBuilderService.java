@@ -21,15 +21,15 @@ public class KafkaPayloadBuilderService {
 
     private final ReturnMapper returnMapper;
 
-    public BorrowEventPayload buildBorrowPayload(UUID memberCardUUID, BookPayload booksArrayJson, UUID borrowUid, String eventType, String sourceService, LocalDate startDate, LocalDate endDate) {
+    public BorrowCreatedEvent buildBorrowPayload(UUID memberCardUUID, BookPayload booksArrayJson, UUID borrowUid, String eventType, String sourceService, LocalDate startDate, LocalDate endDate) {
 
         List<BookChapterReference> references = booksArrayJson.getData().stream().map(item -> new BookChapterReference(item.getBook_uuid(), item.getChapter_uuid())).toList();
 
-        BorrowEventData dataPayload = borrowMapper.toEventData(memberCardUUID, borrowUid, startDate, endDate, references);
+        BorrowCreatedEventData dataPayload = borrowMapper.toEventData(memberCardUUID, borrowUid, startDate, endDate, references);
 
         Metadata metadataPayload = buildMetadata(eventType, sourceService, borrowUid);
 
-        return BorrowEventPayload.builder().metadata(metadataPayload).data(dataPayload).build();
+        return BorrowCreatedEvent.builder().metadata(metadataPayload).data(dataPayload).build();
     }
 
     public ReturnEventPayload buildReturnPayload(UUID memberCardUUID, BookPayload booksArrayJson, UUID borrowUid, String eventType, String sourceService, LocalDate startDate, LocalDate endDate, LocalDate returnDate, Boolean returnLately, Long daysLate, BigDecimal lateFee) {
