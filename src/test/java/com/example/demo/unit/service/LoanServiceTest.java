@@ -1,7 +1,7 @@
 package com.example.demo.unit.service;
 
 import com.example.demo.dto.BookPayload;
-import com.example.demo.dto.BorrowEventPayload;
+import com.example.demo.dto.BorrowCreatedEvent;
 import com.example.demo.model.Borrow;
 import com.example.demo.repository.BorrowRepository;
 import com.example.demo.service.KafkaPayloadBuilderService;
@@ -45,13 +45,13 @@ class LoanServiceTest {
 
     private BookPayload bookPayload;
     private Borrow borrow;
-    private BorrowEventPayload borrowEventPayload;
+    private BorrowCreatedEvent borrowCreatedEvent;
 
     @BeforeEach
     void setUp() {
         bookPayload = Instancio.create(BookPayload.class);
         borrow = Instancio.create(Borrow.class);
-        borrowEventPayload = Instancio.create(BorrowEventPayload.class);
+        borrowCreatedEvent = Instancio.create(BorrowCreatedEvent.class);
     }
 
     @Test
@@ -59,7 +59,7 @@ class LoanServiceTest {
         UUID uuid = UUID.randomUUID();
         when(borrowRepository.existsByMemberCardUuid(uuid)).thenReturn(false);
         when(payloadBuilderService.buildBorrowEntities(any(), any(), any(), any(), any())).thenReturn(List.of(borrow));
-        when(payloadBuilderService.buildBorrowPayload(any(), any(), any(), any(), any(), any(), any())).thenReturn(borrowEventPayload);
+        when(payloadBuilderService.buildBorrowPayload(any(), any(), any(), any(), any(), any(), any())).thenReturn(borrowCreatedEvent);
         var response = loanService.borrowBooks(uuid, bookPayload);
         verify(borrowRepository, times(1)).saveAll(anyList());
         verify(kafkaTemplate).send(eq("library.borrow.v1"), any(), any());
@@ -104,7 +104,7 @@ class LoanServiceTest {
         when(borrowRepository.existsByMemberCardUuid(uuid)).thenReturn(true);
         when(borrowRepository.checkLatestBorrowDate(uuid)).thenReturn(false);
         when(payloadBuilderService.buildBorrowEntities(any(), any(), any(), any(), any())).thenReturn(List.of(borrow));
-        when(payloadBuilderService.buildBorrowPayload(any(), any(), any(), any(), any(), any(), any())).thenReturn(borrowEventPayload);
+        when(payloadBuilderService.buildBorrowPayload(any(), any(), any(), any(), any(), any(), any())).thenReturn(borrowCreatedEvent);
         var response = loanService.borrowBooks(uuid, bookPayload);
         verify(borrowRepository, times(1)).saveAll(anyList());
         verify(kafkaTemplate).send(eq("library.borrow.v1"), any(), any());
