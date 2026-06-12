@@ -13,7 +13,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ReturnEventData {
+public class ReturnCreatedEventData {
 
     private UUID member_card_uuid;
     private UUID borrow_uuid;
