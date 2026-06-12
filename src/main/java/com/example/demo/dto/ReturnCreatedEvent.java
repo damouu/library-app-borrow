@@ -9,9 +9,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ReturnEventPayload {
+public class ReturnCreatedEvent {
 
     private Metadata metadata;
 
-    private ReturnEventData data;
+    private ReturnCreatedEventData data;
 }
