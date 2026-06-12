@@ -2,7 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.BookPayload;
 import com.example.demo.dto.BorrowCreatedEvent;
-import com.example.demo.dto.ReturnEventPayload;
+import com.example.demo.dto.ReturnCreatedEvent;
 import com.example.demo.model.Borrow;
 import com.example.demo.repository.BorrowRepository;
 import com.example.demo.util.DateCalculationUtil;
@@ -89,7 +89,7 @@ public class LoanService {
         BigDecimal fineAmount = BigDecimal.valueOf(totalFee.intValueExact());
         LocalDate startDate = borrows.getFirst().getBorrowStartDate();
         LocalDate endDate = borrows.getFirst().getBorrowEndDate();
-        ReturnEventPayload finalPayload = payloadBuilderService.buildReturnPayload(memberCardUUID, booksArrayJson, borrowUUID, "LIBRARY_RETURNED", "library-app-borrow-v1", startDate, endDate, currentDate, isLate, daysLate, fineAmount);
+        ReturnCreatedEvent finalPayload = payloadBuilderService.buildReturnPayload(memberCardUUID, booksArrayJson, borrowUUID, "LIBRARY_RETURNED", "library-app-borrow-v1", startDate, endDate, currentDate, isLate, daysLate, fineAmount);
         borrowRepository.setReturnDateForBorrows(borrows, currentDate);
         KafkaTemplate.send("library.return.v1", borrowUUID, finalPayload);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("borrow_UUID", borrowUUID, "return_lately", isLate, "days_late", daysLate, "fine_amount", fineAmount)));
