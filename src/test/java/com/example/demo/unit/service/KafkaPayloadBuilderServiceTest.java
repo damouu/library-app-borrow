@@ -39,12 +39,12 @@ class KafkaPayloadBuilderServiceTest {
     @DisplayName("Should build borrow Kafka payload with borrow metadata and inventory data")
     void testBuildBorrowPayload() {
         BorrowCreatedEvent borrowCreatedEvent = kafkaPayloadBuilderService.buildBorrowPayload(memberCardUUID, bookPayload, borrowUUID, "BORROW_TYPE", "BORROW", LocalDate.now(), LocalDate.now().plusWeeks(2));
-        Assertions.assertEquals(borrowUUID, borrowCreatedEvent.getMetadata().getEvent_uuid());
-        Assertions.assertEquals("BORROW_TYPE", borrowCreatedEvent.getMetadata().getEvent_type());
-        Assertions.assertEquals("BORROW", borrowCreatedEvent.getMetadata().getSource_service());
-        Assertions.assertNotNull(borrowCreatedEvent.getData().getBorrowed_items());
-        Assertions.assertEquals(memberCardUUID, borrowCreatedEvent.getData().getMember_card_uuid());
-        Assertions.assertSame(borrowUUID, borrowCreatedEvent.getData().getBorrow_uuid());
+        Assertions.assertEquals(borrowUUID, borrowCreatedEvent.metadata().event_uuid());
+        Assertions.assertEquals("BORROW_TYPE", borrowCreatedEvent.metadata().event_type());
+        Assertions.assertEquals("BORROW", borrowCreatedEvent.metadata().source_service());
+        Assertions.assertNotNull(borrowCreatedEvent.data().borrowed_items());
+        Assertions.assertEquals(memberCardUUID, borrowCreatedEvent.data().member_card_uuid());
+        Assertions.assertSame(borrowUUID, borrowCreatedEvent.data().borrow_uuid());
     }
 
     @Test
@@ -52,14 +52,14 @@ class KafkaPayloadBuilderServiceTest {
     void testBuildReturnPayload() {
         Long daysLate = 0L;
         ReturnCreatedEvent returnCreatedEvent = kafkaPayloadBuilderService.buildReturnPayload(memberCardUUID, bookPayload, borrowUUID, "RETURN_TYPE", "BORROW", LocalDate.now(), LocalDate.now().plusWeeks(2), LocalDate.now().plusDays(2), false, daysLate, BigDecimal.ZERO);
-        Assertions.assertEquals(borrowUUID, returnCreatedEvent.getMetadata().getEvent_uuid());
-        Assertions.assertEquals(memberCardUUID, returnCreatedEvent.getData().getMember_card_uuid());
-        Assertions.assertEquals("RETURN_TYPE", returnCreatedEvent.getMetadata().getEvent_type());
-        Assertions.assertEquals("BORROW", returnCreatedEvent.getMetadata().getSource_service());
-        Assertions.assertNotNull(returnCreatedEvent.getData().getReturned_items());
-        Assertions.assertNotNull(returnCreatedEvent.getData().getReturn_lately());
-        Assertions.assertSame(borrowUUID, returnCreatedEvent.getData().getBorrow_uuid());
-        Assertions.assertFalse(returnCreatedEvent.getData().getReturn_lately());
+        Assertions.assertEquals(borrowUUID, returnCreatedEvent.metadata().event_uuid());
+        Assertions.assertEquals(memberCardUUID, returnCreatedEvent.data().member_card_uuid());
+        Assertions.assertEquals("RETURN_TYPE", returnCreatedEvent.metadata().event_type());
+        Assertions.assertEquals("BORROW", returnCreatedEvent.metadata().source_service());
+        Assertions.assertNotNull(returnCreatedEvent.data().returned_items());
+        Assertions.assertNotNull(returnCreatedEvent.data().returned_items());
+        Assertions.assertSame(borrowUUID, returnCreatedEvent.data().borrow_uuid());
+        Assertions.assertFalse(returnCreatedEvent.data().returned_items().isEmpty());
     }
 
     @Test
@@ -67,15 +67,15 @@ class KafkaPayloadBuilderServiceTest {
     void testBuildReturnPayloadWithLateReturn() {
         Long daysLate = 5L;
         ReturnCreatedEvent returnCreatedEvent = kafkaPayloadBuilderService.buildReturnPayload(memberCardUUID, bookPayload, borrowUUID, "RETURN_TYPE", "BORROW", LocalDate.now(), LocalDate.now().plusWeeks(2), LocalDate.now().plusDays(2), true, daysLate, BigDecimal.valueOf(500));
-        Assertions.assertEquals(borrowUUID, returnCreatedEvent.getMetadata().getEvent_uuid());
-        Assertions.assertEquals(memberCardUUID, returnCreatedEvent.getData().getMember_card_uuid());
-        Assertions.assertEquals("RETURN_TYPE", returnCreatedEvent.getMetadata().getEvent_type());
-        Assertions.assertEquals("BORROW", returnCreatedEvent.getMetadata().getSource_service());
-        Assertions.assertNotNull(returnCreatedEvent.getData().getReturned_items());
-        Assertions.assertSame(borrowUUID, returnCreatedEvent.getData().getBorrow_uuid());
-        Assertions.assertTrue(returnCreatedEvent.getData().getReturn_lately());
-        Assertions.assertEquals(5, returnCreatedEvent.getData().getDays_late());
-        Assertions.assertEquals(BigDecimal.valueOf(500), returnCreatedEvent.getData().getLate_fee());
+        Assertions.assertEquals(borrowUUID, returnCreatedEvent.metadata().event_uuid());
+        Assertions.assertEquals(memberCardUUID, returnCreatedEvent.data().member_card_uuid());
+        Assertions.assertEquals("RETURN_TYPE", returnCreatedEvent.metadata().event_type());
+        Assertions.assertEquals("BORROW", returnCreatedEvent.metadata().source_service());
+        Assertions.assertNotNull(returnCreatedEvent.data().returned_items());
+        Assertions.assertSame(borrowUUID, returnCreatedEvent.data().borrow_uuid());
+        Assertions.assertFalse(returnCreatedEvent.data().returned_items().isEmpty());
+        Assertions.assertEquals(5, returnCreatedEvent.data().days_late());
+        Assertions.assertEquals(BigDecimal.valueOf(500), returnCreatedEvent.data().late_fee());
     }
 
     @Test
@@ -87,6 +87,6 @@ class KafkaPayloadBuilderServiceTest {
         Assertions.assertEquals(LocalDate.now(), borrowList.getFirst().getBorrowStartDate());
         Assertions.assertEquals(borrowUUID, borrowList.getFirst().getBorrowUuid());
         Assertions.assertEquals(memberCardUUID, borrowList.getFirst().getMemberCardUuid());
-        Assertions.assertEquals(bookPayload.getData().getFirst().getBook_uuid(), borrowList.getFirst().getBookUuid());
+        Assertions.assertEquals(bookPayload.data().getFirst().book_uuid(), borrowList.getFirst().getBookUuid());
     }
 }
