@@ -15,9 +15,7 @@ class KafkaTopicBuilderTest {
     @Test
     @DisplayName("Should create Kafka topic for borrow events")
     void shouldCreateBorrowTopic() {
-
         NewTopic topic = kafkaTopicBuilder.borrowTopic();
-
         assertNotNull(topic);
         assertEquals("library.borrow.v1", topic.name());
     }
@@ -25,9 +23,7 @@ class KafkaTopicBuilderTest {
     @Test
     @DisplayName("Should create Kafka topic for return events")
     void shouldCreateReturnTopic() {
-
         NewTopic topic = kafkaTopicBuilder.returnTopic();
-
         assertNotNull(topic);
         assertEquals("library.return.v1", topic.name());
     }
