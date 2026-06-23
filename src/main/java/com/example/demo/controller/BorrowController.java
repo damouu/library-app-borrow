@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.BookPayload;
+import com.example.demo.dto.BorrowCreatedSummaryDTO;
 import com.example.demo.service.LoanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,7 +14,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Map;
 import java.util.UUID;
 
 @Validated
@@ -25,15 +25,13 @@ public class BorrowController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping(path = "/books", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> postBorrowBooks(@RequestBody BookPayload booksArrayJson, @AuthenticationPrincipal Jwt jwt, @RequestHeader("X-User-UUID") UUID memberCardUUID) {
-
+    public ResponseEntity<BorrowCreatedSummaryDTO> postBorrowBooks(@RequestBody BookPayload booksArrayJson, @AuthenticationPrincipal Jwt jwt, @RequestHeader("X-User-UUID") UUID memberCardUUID) {
         String jwtMemberCard = jwt.getClaimAsString("user_memberCardUUID");
-
         if (!jwtMemberCard.equals(memberCardUUID.toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "memberCard UUID mismatch");
         }
-
-        return loanService.borrowBooks(memberCardUUID, booksArrayJson);
+        BorrowCreatedSummaryDTO result = loanService.borrowBooks(memberCardUUID, booksArrayJson);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @PreAuthorize("isAuthenticated()")
