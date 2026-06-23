@@ -1,8 +1,12 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.BookPayload;
-import com.example.demo.dto.BorrowCreatedEvent;
+import com.example.demo.dto.BorrowAggregate;
+import com.example.demo.dto.BorrowCreatedSummaryDTO;
 import com.example.demo.dto.ReturnCreatedEvent;
+import com.example.demo.exception.DailyBorrowLimitExceededException;
+import com.example.demo.exception.UnreturnedBorrowExistsException;
+import com.example.demo.mapper.BorrowMapper;
 import com.example.demo.model.Borrow;
 import com.example.demo.repository.BorrowRepository;
 import com.example.demo.util.DateCalculationUtil;
@@ -28,9 +32,13 @@ public class LoanService {
 
     private final BorrowRepository borrowRepository;
 
-    private final KafkaTemplate<UUID, Object> KafkaTemplate;
+    private final BorrowMapper borrowMapper;
+
+    private final BorrowEventPublisher borrowEventPublisher;
 
     private final KafkaPayloadBuilderService payloadBuilderService;
+
+    private final KafkaTemplate<UUID, Object> kafkaTemplate;
 
     private static final BigDecimal DAILY_FINE_RATE = new BigDecimal("500");
 
@@ -39,29 +47,30 @@ public class LoanService {
      * 予定されたの返すの日程を超えちゃうなら何日で数えて罰金を判断されて科します。一日の遅らすに従って五百円の金額が定められたです。
      *
      * @param memberCardUUID the member card uuid
+     * @param booksArrayJson the member card uuid
      * @return the response entity
-     * @throws ResponseStatusException the response status exception
-     * @implNote {@link #SD-234  https://damou.myjetbrains.com/youtrack/issue/SD-234/6LK444GX5Ye644GX5pys44KS6LU5Y20}
+     * @throws DailyBorrowLimitExceededException the response status exception
+     * @throws UnreturnedBorrowExistsException   the response status exception
      */
     @Transactional
-    public ResponseEntity<Map<String, Object>> borrowBooks(UUID memberCardUUID, BookPayload booksArrayJson) throws ResponseStatusException {
+    public BorrowCreatedSummaryDTO borrowBooks(UUID memberCardUUID, BookPayload booksArrayJson) throws DailyBorrowLimitExceededException, UnreturnedBorrowExistsException {
         if (borrowRepository.getBookMemberCardByBook(memberCardUUID)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "まだ貸出返却されていないの貸し出しがあります。");
+            throw new UnreturnedBorrowExistsException();
         }
         if (borrowRepository.existsByMemberCardUuid(memberCardUUID)) {
             boolean checkLatestBorrowDate = borrowRepository.checkLatestBorrowDate(memberCardUUID);
             if (checkLatestBorrowDate) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "一日の借入限度額に達しました。");
+                throw new DailyBorrowLimitExceededException();
             }
         }
-        UUID borrowUid = UUID.randomUUID();
+        UUID borrow_uuid = UUID.randomUUID();
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusWeeks(2);
-        BorrowCreatedEvent finalPayload = payloadBuilderService.buildBorrowPayload(memberCardUUID, booksArrayJson, borrowUid, "LIBRARY_BORROWED", "library-app-borrow-v1", startDate, endDate);
-        List<Borrow> borrows = payloadBuilderService.buildBorrowEntities(booksArrayJson, borrowUid, memberCardUUID, startDate, endDate);
-        borrowRepository.saveAll(borrows);
-        KafkaTemplate.send("library.borrow.v1", borrowUid, finalPayload);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", booksArrayJson.data().size() + "冊の本は貸し出しされる完了です。", "data", Map.of("borrow_UUID", borrowUid.toString(), "start_borrow_date", String.valueOf(startDate), "end_borrow_date", String.valueOf(endDate))));
+        BorrowAggregate aggregate = new BorrowAggregate(borrow_uuid, memberCardUUID, startDate, endDate, booksArrayJson.data());
+        List<Borrow> entities = borrowMapper.toEntities(aggregate);
+        borrowRepository.saveAll(entities);
+        borrowEventPublisher.publishBorrowCreated(aggregate, entities);
+        return borrowMapper.toSummaryDTO(aggregate);
     }
 
     /**
@@ -91,7 +100,7 @@ public class LoanService {
         LocalDate endDate = borrows.getFirst().getBorrowEndDate();
         ReturnCreatedEvent finalPayload = payloadBuilderService.buildReturnPayload(memberCardUUID, booksArrayJson, borrowUUID, "LIBRARY_RETURNED", "library-app-borrow-v1", startDate, endDate, currentDate, isLate, daysLate, fineAmount);
         borrowRepository.setReturnDateForBorrows(borrows, currentDate);
-        KafkaTemplate.send("library.return.v1", borrowUUID, finalPayload);
+        kafkaTemplate.send("library.return.v1", borrowUUID, finalPayload);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("borrow_UUID", borrowUUID, "return_lately", isLate, "days_late", daysLate, "fine_amount", fineAmount)));
     }
 
