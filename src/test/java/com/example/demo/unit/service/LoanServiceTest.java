@@ -1,9 +1,15 @@
 package com.example.demo.unit.service;
 
 import com.example.demo.dto.BookPayload;
+import com.example.demo.dto.BorrowAggregate;
 import com.example.demo.dto.BorrowCreatedEvent;
+import com.example.demo.dto.BorrowCreatedSummaryDTO;
+import com.example.demo.exception.DailyBorrowLimitExceededException;
+import com.example.demo.exception.UnreturnedBorrowExistsException;
+import com.example.demo.mapper.BorrowMapper;
 import com.example.demo.model.Borrow;
 import com.example.demo.repository.BorrowRepository;
+import com.example.demo.service.BorrowEventPublisher;
 import com.example.demo.service.KafkaPayloadBuilderService;
 import com.example.demo.service.LoanService;
 import org.instancio.Instancio;
@@ -16,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -40,6 +45,13 @@ class LoanServiceTest {
     @Mock
     private KafkaTemplate<UUID, Object> kafkaTemplate;
 
+    @Mock
+    private BorrowMapper borrowMapper;
+
+
+    @Mock
+    private BorrowEventPublisher borrowEventPublisher;
+
     @InjectMocks
     private LoanService loanService;
 
@@ -55,19 +67,20 @@ class LoanServiceTest {
     }
 
     @Test
-    void borrowBooks_existsByMemberCardUuid_true_1() {
-        UUID uuid = UUID.randomUUID();
-        when(borrowRepository.existsByMemberCardUuid(uuid)).thenReturn(false);
-        when(payloadBuilderService.buildBorrowEntities(any(), any(), any(), any(), any())).thenReturn(List.of(borrow));
-        when(payloadBuilderService.buildBorrowPayload(any(), any(), any(), any(), any(), any(), any())).thenReturn(borrowCreatedEvent);
-        var response = loanService.borrowBooks(uuid, bookPayload);
-        verify(borrowRepository, times(1)).saveAll(anyList());
-        verify(kafkaTemplate).send(eq("library.borrow.v1"), any(), any());
-        Assertions.assertTrue(response.getStatusCode().is2xxSuccessful());
-        assertThat(response.getBody()).isInstanceOf(Map.class).extracting("message").isEqualTo(bookPayload.data().size() + "冊の本は貸し出しされる完了です。");
-        assertThat(response.getBody()).isInstanceOf(Map.class).extracting("data").isInstanceOf(Map.class).extracting("borrow_UUID").isNotNull();
-        assertThat(response.getBody()).isInstanceOf(Map.class).extracting("data").isInstanceOf(Map.class).extracting("start_borrow_date").isEqualTo(LocalDate.now().toString());
-        assertThat(response.getBody()).isInstanceOf(Map.class).extracting("data").isInstanceOf(Map.class).extracting("end_borrow_date").isEqualTo(LocalDate.now().plusWeeks(2).toString());
+    void borrowBooks_should_successfully_borrow_books_when_user_has_no_existing_borrow() {
+        UUID memberCardUuid = UUID.randomUUID();
+        when(borrowRepository.getBookMemberCardByBook(memberCardUuid)).thenReturn(false);
+        when(borrowRepository.existsByMemberCardUuid(memberCardUuid)).thenReturn(false);
+        List<Borrow> entities = List.of(borrow);
+        when(borrowMapper.toEntities(any(BorrowAggregate.class))).thenReturn(entities);
+        when(borrowRepository.saveAll(entities)).thenReturn(entities);
+        BorrowCreatedSummaryDTO expectedDto = new BorrowCreatedSummaryDTO(UUID.randomUUID(), memberCardUuid, LocalDate.now().toString(), LocalDate.now().plusWeeks(2).toString(), List.of());
+        when(borrowMapper.toSummaryDTO(any(BorrowAggregate.class))).thenReturn(expectedDto);
+        BorrowCreatedSummaryDTO result = loanService.borrowBooks(memberCardUuid, bookPayload);
+        verify(borrowRepository).saveAll(entities);
+        verify(borrowEventPublisher).publishBorrowCreated(any(BorrowAggregate.class), eq(entities));
+        assertThat(result).isNotNull();
+        assertThat(result.memberCardUuid()).isEqualTo(memberCardUuid);
     }
 
 
@@ -75,13 +88,9 @@ class LoanServiceTest {
     void borrowBooks_getBookMemberCardByBook_true() {
         UUID uuid = UUID.fromString("030b5fb3-2266-41c3-a016-5f800ef39142");
         when(borrowRepository.getBookMemberCardByBook(uuid)).thenReturn(true);
-        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
-            loanService.borrowBooks(uuid, bookPayload);
-        });
+        UnreturnedBorrowExistsException exception = Assertions.assertThrows(UnreturnedBorrowExistsException.class, () -> loanService.borrowBooks(uuid, bookPayload));
         verify(borrowRepository, times(1)).getBookMemberCardByBook(uuid);
-        Assertions.assertTrue(exception.getStatus().is4xxClientError());
-        Assertions.assertEquals(HttpStatus.CONFLICT, exception.getStatus());
-        Assertions.assertEquals(409 + " CONFLICT \"まだ貸出返却されていないの貸し出しがあります。\"", exception.getMessage());
+        Assertions.assertEquals("まだ貸出返却されていないの貸し出しがあります。", exception.getMessage());
     }
 
     @Test
@@ -89,30 +98,26 @@ class LoanServiceTest {
         UUID uuid = UUID.randomUUID();
         when(borrowRepository.existsByMemberCardUuid(uuid)).thenReturn(true);
         when(borrowRepository.checkLatestBorrowDate(uuid)).thenReturn(true);
-        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
+        DailyBorrowLimitExceededException exception = Assertions.assertThrows(DailyBorrowLimitExceededException.class, () -> {
             loanService.borrowBooks(uuid, bookPayload);
         });
         verify(borrowRepository, times(1)).getBookMemberCardByBook(uuid);
-        Assertions.assertTrue(exception.getStatus().is4xxClientError());
-        Assertions.assertEquals(HttpStatus.FORBIDDEN, exception.getStatus());
-        Assertions.assertEquals(403 + " FORBIDDEN \"一日の借入限度額に達しました。\"", exception.getMessage());
+        Assertions.assertEquals("一日の借入限度額に達しました。", exception.getMessage());
     }
 
     @Test
-    void borrowBooks_existsByMemberCardUuid_false() {
-        UUID uuid = UUID.randomUUID();
-        when(borrowRepository.existsByMemberCardUuid(uuid)).thenReturn(true);
-        when(borrowRepository.checkLatestBorrowDate(uuid)).thenReturn(false);
-        when(payloadBuilderService.buildBorrowEntities(any(), any(), any(), any(), any())).thenReturn(List.of(borrow));
-        when(payloadBuilderService.buildBorrowPayload(any(), any(), any(), any(), any(), any(), any())).thenReturn(borrowCreatedEvent);
-        var response = loanService.borrowBooks(uuid, bookPayload);
-        verify(borrowRepository, times(1)).saveAll(anyList());
-        verify(kafkaTemplate).send(eq("library.borrow.v1"), any(), any());
-        Assertions.assertTrue(response.getStatusCode().is2xxSuccessful());
-        assertThat(response.getBody()).isInstanceOf(Map.class).extracting("message").isEqualTo(bookPayload.data().size() + "冊の本は貸し出しされる完了です。");
-        assertThat(response.getBody()).isInstanceOf(Map.class).extracting("data").isInstanceOf(Map.class).extracting("borrow_UUID").isNotNull();
-        assertThat(response.getBody()).isInstanceOf(Map.class).extracting("data").isInstanceOf(Map.class).extracting("start_borrow_date").isEqualTo(LocalDate.now().toString());
-        assertThat(response.getBody()).isInstanceOf(Map.class).extracting("data").isInstanceOf(Map.class).extracting("end_borrow_date").isEqualTo(LocalDate.now().plusWeeks(2).toString());
+    void borrowBooks_should_successfully_borrow_books() {
+        UUID memberCardUuid = UUID.randomUUID();
+        when(borrowRepository.getBookMemberCardByBook(memberCardUuid)).thenReturn(false);
+        when(borrowRepository.existsByMemberCardUuid(memberCardUuid)).thenReturn(false);
+        List<Borrow> entities = List.of(borrow);
+        when(borrowMapper.toEntities(any(BorrowAggregate.class))).thenReturn(entities);
+        when(borrowRepository.saveAll(entities)).thenReturn(entities);
+        BorrowCreatedSummaryDTO expectedDto = new BorrowCreatedSummaryDTO(UUID.randomUUID(), memberCardUuid, LocalDate.now().toString(), LocalDate.now().plusWeeks(2).toString(), List.of());
+        when(borrowMapper.toSummaryDTO(any(BorrowAggregate.class))).thenReturn(expectedDto);
+        BorrowCreatedSummaryDTO response = loanService.borrowBooks(memberCardUuid, bookPayload);
+        assertThat(response).isNotNull();
+        assertThat(response.memberCardUuid()).isEqualTo(memberCardUuid);
     }
 
     @Test
