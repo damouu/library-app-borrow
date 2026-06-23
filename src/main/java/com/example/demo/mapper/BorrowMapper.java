@@ -12,12 +12,13 @@ import java.util.UUID;
 public class BorrowMapper {
 
     public BorrowCreatedEventData toEventData(UUID member_card_uuid, UUID borrowUid, LocalDate borrow_start_date, LocalDate borrow_end_date, List<BookChapterReference> references) {
-        return BorrowCreatedEventData.builder()
-                .member_card_uuid(member_card_uuid)
-                .borrow_uuid(borrowUid)
-                .borrowed_items(references)
-                .borrow_start_date(String.valueOf(borrow_start_date))
-                .borrow_end_date(String.valueOf(borrow_end_date))
-                .build();
+
+        return new BorrowCreatedEventData(
+                member_card_uuid,
+                borrowUid,
+                String.valueOf(borrow_start_date),
+                String.valueOf(borrow_end_date),
+                references
+        );
     }
 }
