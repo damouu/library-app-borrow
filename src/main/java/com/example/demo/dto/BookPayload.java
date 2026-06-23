@@ -1,16 +1,9 @@
 package com.example.demo.dto;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
-public class BookPayload {
 
-    private List<LoanItemDetails> data;
-
+public record BookPayload(
+        List<LoanItemDetails> data
+) {
 }

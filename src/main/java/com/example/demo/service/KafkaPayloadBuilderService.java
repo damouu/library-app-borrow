@@ -39,14 +39,10 @@ public class KafkaPayloadBuilderService {
      * @return the borrow created event
      */
     public BorrowCreatedEvent buildBorrowPayload(UUID memberCardUUID, BookPayload booksArrayJson, UUID borrowUid, String eventType, String sourceService, LocalDate startDate, LocalDate endDate) {
-
-        List<BookChapterReference> references = booksArrayJson.getData().stream().map(item -> new BookChapterReference(item.getBook_uuid(), item.getChapter_uuid())).toList();
-
-        BorrowCreatedEventData dataPayload = borrowMapper.toEventData(memberCardUUID, borrowUid, startDate, endDate, references);
-
-        Metadata metadataPayload = buildMetadata(eventType, sourceService, borrowUid);
-
-        return BorrowCreatedEvent.builder().metadata(metadataPayload).data(dataPayload).build();
+        List<BookChapterReference> references = booksArrayJson.data().stream().map(item -> new BookChapterReference(item.book_uuid(), item.chapter_uuid())).toList();
+        BorrowCreatedEventData borrowCreatedEventData = borrowMapper.toEventData(memberCardUUID, borrowUid, startDate, endDate, references);
+        Metadata metadata = buildMetadata(eventType, sourceService, borrowUid);
+        return new BorrowCreatedEvent(metadata, borrowCreatedEventData);
     }
 
 
@@ -67,14 +63,10 @@ public class KafkaPayloadBuilderService {
      * @return the return created event
      */
     public ReturnCreatedEvent buildReturnPayload(UUID memberCardUUID, BookPayload booksArrayJson, UUID borrowUid, String eventType, String sourceService, LocalDate startDate, LocalDate endDate, LocalDate returnDate, Boolean returnLately, Long daysLate, BigDecimal lateFee) {
-
-        List<BookToDecrement> booksToProcess = booksArrayJson.getData().stream().map(details -> new BookToDecrement(details.getBook_uuid(), details.getChapter_uuid())).toList();
-
-        ReturnCreatedEventData dataPayload = returnMapper.toEventData(memberCardUUID, borrowUid, startDate, endDate, returnDate, returnLately, daysLate, lateFee, booksToProcess);
-
-        Metadata metadataPayload = buildMetadata(eventType, sourceService, borrowUid);
-
-        return ReturnCreatedEvent.builder().metadata(metadataPayload).data(dataPayload).build();
+        List<BookToDecrement> booksToProcess = booksArrayJson.data().stream().map(details -> new BookToDecrement(details.book_uuid(), details.chapter_uuid())).toList();
+        ReturnCreatedEventData returnCreatedEventData = returnMapper.toEventData(memberCardUUID, borrowUid, startDate, endDate, returnDate, returnLately, daysLate, lateFee, booksToProcess);
+        Metadata metadata = buildMetadata(eventType, sourceService, borrowUid);
+        return new ReturnCreatedEvent(metadata, returnCreatedEventData);
     }
 
 
@@ -89,7 +81,7 @@ public class KafkaPayloadBuilderService {
      * @return the list
      */
     public List<Borrow> buildBorrowEntities(BookPayload booksArrayJson, UUID borrowUid, UUID memberCardUUID, LocalDate startDate, LocalDate endDate) {
-        return booksArrayJson.getData().stream().map(details -> Borrow.builder().borrowStartDate(startDate).borrowEndDate(endDate).borrowUuid(borrowUid).memberCardUuid(memberCardUUID).bookUuid(details.getBook_uuid()).chapterUuid(details.getChapter_uuid()).build()).toList();
+        return booksArrayJson.data().stream().map(details -> Borrow.builder().borrowStartDate(startDate).borrowEndDate(endDate).borrowUuid(borrowUid).memberCardUuid(memberCardUUID).bookUuid(details.book_uuid()).chapterUuid(details.chapter_uuid()).build()).toList();
     }
 
 
@@ -102,6 +94,6 @@ public class KafkaPayloadBuilderService {
      * @return the metadata
      */
     public Metadata buildMetadata(String eventType, String sourceService, UUID eventUUID) {
-        return Metadata.builder().event_uuid(eventUUID).event_type(eventType).source_service(sourceService).timestamp(LocalDateTime.now().toString()).build();
+        return new Metadata(LocalDateTime.now().toString(), sourceService, eventType, eventUUID);
     }
 }

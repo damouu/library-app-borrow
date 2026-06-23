@@ -64,7 +64,7 @@ class LoanServiceTest {
         verify(borrowRepository, times(1)).saveAll(anyList());
         verify(kafkaTemplate).send(eq("library.borrow.v1"), any(), any());
         Assertions.assertTrue(response.getStatusCode().is2xxSuccessful());
-        assertThat(response.getBody()).isInstanceOf(Map.class).extracting("message").isEqualTo(bookPayload.getData().size() + "冊の本は貸し出しされる完了です。");
+        assertThat(response.getBody()).isInstanceOf(Map.class).extracting("message").isEqualTo(bookPayload.data().size() + "冊の本は貸し出しされる完了です。");
         assertThat(response.getBody()).isInstanceOf(Map.class).extracting("data").isInstanceOf(Map.class).extracting("borrow_UUID").isNotNull();
         assertThat(response.getBody()).isInstanceOf(Map.class).extracting("data").isInstanceOf(Map.class).extracting("start_borrow_date").isEqualTo(LocalDate.now().toString());
         assertThat(response.getBody()).isInstanceOf(Map.class).extracting("data").isInstanceOf(Map.class).extracting("end_borrow_date").isEqualTo(LocalDate.now().plusWeeks(2).toString());
@@ -109,7 +109,7 @@ class LoanServiceTest {
         verify(borrowRepository, times(1)).saveAll(anyList());
         verify(kafkaTemplate).send(eq("library.borrow.v1"), any(), any());
         Assertions.assertTrue(response.getStatusCode().is2xxSuccessful());
-        assertThat(response.getBody()).isInstanceOf(Map.class).extracting("message").isEqualTo(bookPayload.getData().size() + "冊の本は貸し出しされる完了です。");
+        assertThat(response.getBody()).isInstanceOf(Map.class).extracting("message").isEqualTo(bookPayload.data().size() + "冊の本は貸し出しされる完了です。");
         assertThat(response.getBody()).isInstanceOf(Map.class).extracting("data").isInstanceOf(Map.class).extracting("borrow_UUID").isNotNull();
         assertThat(response.getBody()).isInstanceOf(Map.class).extracting("data").isInstanceOf(Map.class).extracting("start_borrow_date").isEqualTo(LocalDate.now().toString());
         assertThat(response.getBody()).isInstanceOf(Map.class).extracting("data").isInstanceOf(Map.class).extracting("end_borrow_date").isEqualTo(LocalDate.now().plusWeeks(2).toString());

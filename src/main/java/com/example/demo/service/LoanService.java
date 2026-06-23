@@ -61,7 +61,7 @@ public class LoanService {
         List<Borrow> borrows = payloadBuilderService.buildBorrowEntities(booksArrayJson, borrowUid, memberCardUUID, startDate, endDate);
         borrowRepository.saveAll(borrows);
         KafkaTemplate.send("library.borrow.v1", borrowUid, finalPayload);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", booksArrayJson.getData().size() + "冊の本は貸し出しされる完了です。", "data", Map.of("borrow_UUID", borrowUid.toString(), "start_borrow_date", String.valueOf(startDate), "end_borrow_date", String.valueOf(endDate))));
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", booksArrayJson.data().size() + "冊の本は貸し出しされる完了です。", "data", Map.of("borrow_UUID", borrowUid.toString(), "start_borrow_date", String.valueOf(startDate), "end_borrow_date", String.valueOf(endDate))));
     }
 
     /**
