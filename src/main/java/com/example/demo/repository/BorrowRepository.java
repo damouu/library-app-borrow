@@ -21,7 +21,7 @@ public interface BorrowRepository extends JpaRepository<Borrow, Integer>, JpaSpe
     List<Borrow> getBorrowsByBorrowUuidAndMemberCardUuidAndBorrowReturnDateIsNull(UUID borrowUuid, UUID memberCardUuid);
 
     @Query(value = "SELECT (CURRENT_DATE = latest_borrow_date) AS is_current_date_latest FROM (SELECT borrow_start_date AS latest_borrow_date FROM borrow WHERE member_card_uuid = :memberCardUuid AND borrow_return_date is not null ORDER BY borrow_start_date desc LIMIT 1) AS latest_borrow", nativeQuery = true)
-    boolean checkLatestBorrowDate(UUID memberCardUuid);
+    Boolean checkLatestBorrowDate(UUID memberCardUuid);
 
     boolean existsByMemberCardUuid(@Param("memberCardUuid") UUID memberCardUuid);
 

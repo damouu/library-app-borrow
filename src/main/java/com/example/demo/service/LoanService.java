@@ -1,29 +1,22 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.BookPayload;
-import com.example.demo.dto.BorrowAggregate;
-import com.example.demo.dto.BorrowCreatedSummaryDTO;
-import com.example.demo.dto.ReturnCreatedEvent;
-import com.example.demo.exception.DailyBorrowLimitExceededException;
-import com.example.demo.exception.UnreturnedBorrowExistsException;
+import com.example.demo.dto.*;
+import com.example.demo.event.publisher.BorrowEventPublisher;
+import com.example.demo.mapper.BorrowAssembler;
 import com.example.demo.mapper.BorrowMapper;
+import com.example.demo.mapper.ReturnBorrowAssembler;
+import com.example.demo.mapper.ReturnMapper;
 import com.example.demo.model.Borrow;
+import com.example.demo.policy.BorrowPolicy;
+import com.example.demo.policy.ReturnBorrowPolicy;
 import com.example.demo.repository.BorrowRepository;
-import com.example.demo.util.DateCalculationUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -34,11 +27,17 @@ public class LoanService {
 
     private final BorrowMapper borrowMapper;
 
+    private final ReturnMapper returnMapper;
+
+    private final ReturnBorrowPolicy returnBorrowPolicy;
+
+    private final BorrowPolicy borrowPolicy;
+
     private final BorrowEventPublisher borrowEventPublisher;
 
-    private final KafkaPayloadBuilderService payloadBuilderService;
+    private final ReturnBorrowAssembler returnBorrowAssembler;
 
-    private final KafkaTemplate<UUID, Object> kafkaTemplate;
+    private final BorrowAssembler borrowAssembler;
 
     private static final BigDecimal DAILY_FINE_RATE = new BigDecimal("500");
 
@@ -49,24 +48,17 @@ public class LoanService {
      * @param memberCardUUID the member card uuid
      * @param booksArrayJson the member card uuid
      * @return the response entity
-     * @throws DailyBorrowLimitExceededException the response status exception
-     * @throws UnreturnedBorrowExistsException   the response status exception
      */
     @Transactional
-    public BorrowCreatedSummaryDTO borrowBooks(UUID memberCardUUID, BookPayload booksArrayJson) throws DailyBorrowLimitExceededException, UnreturnedBorrowExistsException {
-        if (borrowRepository.getBookMemberCardByBook(memberCardUUID)) {
-            throw new UnreturnedBorrowExistsException();
-        }
-        if (borrowRepository.existsByMemberCardUuid(memberCardUUID)) {
-            boolean checkLatestBorrowDate = borrowRepository.checkLatestBorrowDate(memberCardUUID);
-            if (checkLatestBorrowDate) {
-                throw new DailyBorrowLimitExceededException();
-            }
-        }
-        UUID borrow_uuid = UUID.randomUUID();
+    public BorrowCreatedSummaryDTO borrowBooks(UUID memberCardUUID, BookPayload booksArrayJson) {
+        borrowPolicy.validateNoActiveBorrow(borrowRepository.getBookMemberCardByBook(memberCardUUID));
+        boolean exists = borrowRepository.existsByMemberCardUuid(memberCardUUID);
+        Boolean limitReached = borrowRepository.checkLatestBorrowDate(memberCardUUID);
+        borrowPolicy.validateDailyLimit(exists, limitReached);
+        UUID borrowUuid = UUID.randomUUID();
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusWeeks(2);
-        BorrowAggregate aggregate = new BorrowAggregate(borrow_uuid, memberCardUUID, startDate, endDate, booksArrayJson.data());
+        BorrowAggregate aggregate = borrowAssembler.toAggregate(borrowUuid, memberCardUUID, startDate, endDate, booksArrayJson.data());
         List<Borrow> entities = borrowMapper.toEntities(aggregate);
         borrowRepository.saveAll(entities);
         borrowEventPublisher.publishBorrowCreated(aggregate, entities);
@@ -80,28 +72,20 @@ public class LoanService {
      * @param memberCardUUID the member card uuid
      * @param borrowUUID     the borrow uuid
      * @return the response entity
-     * @throws ResponseStatusException the response status exception
-     * @implNote {@link #SD-234  https://damou.myjetbrains.com/youtrack/issue/SD-234/6LK444GX5Ye644GX5pys44KS6LU5Y20}
      */
     @Transactional
-    public ResponseEntity<Map<String, Map<String, Serializable>>> returnBorrowBooks(UUID memberCardUUID, UUID borrowUUID, @RequestBody BookPayload booksArrayJson) throws ResponseStatusException {
+    public ReturnBorrowCreatedSummaryDTO returnBorrowBooks(UUID memberCardUUID, UUID borrowUUID, BookPayload booksArrayJson) {
         LocalDate currentDate = LocalDate.now();
         List<Borrow> borrows = borrowRepository.getBorrowsByBorrowUuidAndMemberCardUuidAndBorrowReturnDateIsNull(borrowUUID, memberCardUUID);
-        if (borrows.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", Map.of("dede", "該当する貸し出しが見つかりませんでした。")));
-        }
-        LocalDate borrowEndDate = borrows.getFirst().getBorrowEndDate();
-        long daysLate = DateCalculationUtil.calculateWorkingDays(borrowEndDate.plusDays(1), currentDate);
-        boolean isLate = daysLate > 0;
-        BigDecimal days = new BigDecimal(daysLate);
-        BigDecimal totalFee = days.multiply(DAILY_FINE_RATE);
-        BigDecimal fineAmount = BigDecimal.valueOf(totalFee.intValueExact());
-        LocalDate startDate = borrows.getFirst().getBorrowStartDate();
-        LocalDate endDate = borrows.getFirst().getBorrowEndDate();
-        ReturnCreatedEvent finalPayload = payloadBuilderService.buildReturnPayload(memberCardUUID, booksArrayJson, borrowUUID, "LIBRARY_RETURNED", "library-app-borrow-v1", startDate, endDate, currentDate, isLate, daysLate, fineAmount);
+        Borrow borrow = returnBorrowPolicy.validateAndGetBorrow(borrows);
+        long daysLate = returnBorrowPolicy.calculateDaysLate(borrow.getBorrowEndDate(), currentDate);
+        boolean isLate = returnBorrowPolicy.isLate(daysLate);
+        BigDecimal fineAmount = returnBorrowPolicy.calculateFine(daysLate, DAILY_FINE_RATE);
         borrowRepository.setReturnDateForBorrows(borrows, currentDate);
-        kafkaTemplate.send("library.return.v1", borrowUUID, finalPayload);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("borrow_UUID", borrowUUID, "return_lately", isLate, "days_late", daysLate, "fine_amount", fineAmount)));
+        List<LoanItemDetails> items = booksArrayJson.data().stream().map(b -> new LoanItemDetails(b.book_uuid(), b.chapter_uuid())).toList();
+        ReturnBorrowAggregate aggregate = returnBorrowAssembler.toAggregate(borrow, borrowUUID, memberCardUUID, currentDate, isLate, daysLate, fineAmount, items);
+        borrowEventPublisher.publishReturnBorrowCreated(aggregate, borrows);
+        return returnMapper.toSummaryDTO(aggregate);
     }
 
 }

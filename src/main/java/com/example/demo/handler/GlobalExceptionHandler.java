@@ -1,5 +1,6 @@
 package com.example.demo.handler;
 
+import com.example.demo.exception.BorrowNotFoundException;
 import com.example.demo.exception.DailyBorrowLimitExceededException;
 import com.example.demo.exception.UnreturnedBorrowExistsException;
 import org.springframework.http.HttpStatus;
@@ -18,5 +19,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DailyBorrowLimitExceededException.class)
     public ResponseEntity<?> handleLimit(DailyBorrowLimitExceededException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(BorrowNotFoundException.class)
+    public ResponseEntity<?> handleBorrowNotFound(BorrowNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 }

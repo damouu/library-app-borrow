@@ -20,17 +20,12 @@ public final class DateCalculationUtil {
      * @return The count of valid days.
      */
     public static long calculateWorkingDays(LocalDate startDate, LocalDate endDate) {
-
         if (startDate.isAfter(endDate)) {
             return 0;
         }
-
         Set<DayOfWeek> daysToSkip = Set.of(DayOfWeek.MONDAY, DayOfWeek.SUNDAY);
-
         long totalDays = ChronoUnit.DAYS.between(startDate, endDate.plusDays(1));
-
         long skippedDays = startDate.datesUntil(endDate.plusDays(1)).filter(date -> daysToSkip.contains(date.getDayOfWeek())).count();
-
         return totalDays - skippedDays;
     }
 }

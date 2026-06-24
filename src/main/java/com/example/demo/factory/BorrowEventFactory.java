@@ -19,7 +19,7 @@ public class BorrowEventFactory {
     public BorrowCreatedEvent create(BorrowAggregate aggregate, List<Borrow> entities, UUID eventId) {
         List<BookChapterReference> refs = entities.stream().map(e -> new BookChapterReference(e.getBookUuid(), e.getChapterUuid())).toList();
         BorrowCreatedEventData data = borrowMapper.toEventData(aggregate.memberCardUuid(), aggregate.borrowUuid(), aggregate.startDate(), aggregate.endDate(), refs);
-        Metadata metadata = new Metadata(LocalDateTime.now().toString(), "library-app-borrow-v1", "BORROW_CREATED", eventId);
+        Metadata metadata = new Metadata(LocalDateTime.now().toString(), "library-app-borrow-v2", "BORROW_CREATED", eventId);
         return new BorrowCreatedEvent(metadata, data);
     }
 }
