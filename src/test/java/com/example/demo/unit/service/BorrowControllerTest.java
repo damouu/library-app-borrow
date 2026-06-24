@@ -3,6 +3,7 @@ package com.example.demo.unit.service;
 import com.example.demo.controller.BorrowController;
 import com.example.demo.dto.BookPayload;
 import com.example.demo.dto.BorrowCreatedSummaryDTO;
+import com.example.demo.dto.ReturnBorrowCreatedSummaryDTO;
 import com.example.demo.service.LoanService;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.DisplayName;
@@ -15,10 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -75,5 +74,19 @@ class BorrowControllerTest {
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> borrowController.returnBorrowBooks(memberCardUUID, borrowUUID, bookPayload, jwt));
         assertEquals(403, exception.getStatus().value());
         verify(loanService, never()).returnBorrowBooks(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Should return books successfully when JWT matches member card UUID")
+    void shouldReturnBorrowBooksSuccessfully() {
+        UUID memberCardUuid = UUID.randomUUID();
+        UUID borrowUuid = UUID.randomUUID();
+        when(jwt.getClaimAsString("user_memberCardUUID")).thenReturn(memberCardUuid.toString());
+        ReturnBorrowCreatedSummaryDTO expected = Instancio.create(ReturnBorrowCreatedSummaryDTO.class);
+        when(loanService.returnBorrowBooks(memberCardUuid, borrowUuid, bookPayload)).thenReturn(expected);
+        ResponseEntity<?> response = borrowController.returnBorrowBooks(memberCardUuid, borrowUuid, bookPayload, jwt);
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(expected, response.getBody());
+        verify(loanService).returnBorrowBooks(memberCardUuid, borrowUuid, bookPayload);
     }
 }
