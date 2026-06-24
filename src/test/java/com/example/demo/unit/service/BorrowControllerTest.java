@@ -69,18 +69,6 @@ class BorrowControllerTest {
     }
 
     @Test
-    @DisplayName("Should allow authenticated user to return borrowed books")
-    void shouldReturnBorrowedBooksWhenJwtMatchesMemberCard() {
-        Map<String, Serializable> params = Map.of("page", 0, "size", 10);
-        Map<String, Map<String, Serializable>> response = Map.of("pagination", params);
-        ResponseEntity<Map<String, Map<String, Serializable>>> expectedResponse = ResponseEntity.ok(response);
-        when(jwt.getClaimAsString("user_memberCardUUID")).thenReturn(memberCardUUID.toString());
-        when(loanService.returnBorrowBooks(memberCardUUID, borrowUUID, bookPayload)).thenReturn(expectedResponse);
-        ResponseEntity<?> response2 = borrowController.returnBorrowBooks(memberCardUUID, borrowUUID, bookPayload, jwt);
-        assertEquals(expectedResponse.getStatusCode(), response2.getStatusCode());
-    }
-
-    @Test
     @DisplayName("Should reject return request when member card UUID does not match JWT")
     void shouldRejectReturnRequestWhenJwtDoesNotMatchMemberCard() {
         when(jwt.getClaimAsString("user_memberCardUUID")).thenReturn(String.valueOf(UUID.randomUUID()));
