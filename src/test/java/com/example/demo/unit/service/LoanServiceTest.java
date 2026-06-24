@@ -109,6 +109,8 @@ class LoanServiceTest {
         assertEquals(expectedDto, result);
         verify(borrowPolicy).validateNoActiveBorrow(false);
         verify(borrowPolicy).validateDailyLimit(false, false);
+        verify(borrowMapper).toSummaryDTO(aggregate);
+        verify(borrowMapper).toEntities(aggregate);
         verify(borrowRepository).saveAll(entities);
         verify(borrowEventPublisher).publishBorrowCreated(aggregate, entities);
         verify(borrowAssembler).toAggregate(uuidCaptor.capture(), eq(memberCardUUID), startDateCaptor.capture(), endDateCaptor.capture(), eq(items));
