@@ -4,8 +4,8 @@ import java.util.UUID;
 
 
 public record BookChapterReference(
-        UUID bookUUID,
+        UUID book_uuid,
 
-        UUID chapterUUID
+        UUID chapter_uuid
 ) {
 }
