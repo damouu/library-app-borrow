@@ -1,4 +1,4 @@
-package com.example.demo.unit.factory;
+package com.example.demo.unit.service;
 
 import com.example.demo.dto.BookChapterReference;
 import com.example.demo.dto.BorrowAggregate;
@@ -88,7 +88,7 @@ class BorrowEventFactoryTest {
 
         List<BookChapterReference> capturedRefs = refsCaptor.getValue();
         assertEquals(1, capturedRefs.size(), "Should map exactly one reference");
-        assertEquals(mockBookUuid, capturedRefs.get(0).bookUUID(), "Book UUID should map correctly");
-        assertEquals(mockChapterUuid, capturedRefs.get(0).chapterUUID(), "Chapter UUID should map correctly");
+        assertEquals(mockBookUuid, capturedRefs.get(0).book_uuid(), "Book UUID should map correctly");
+        assertEquals(mockChapterUuid, capturedRefs.get(0).chapter_uuid(), "Chapter UUID should map correctly");
     }
 }
